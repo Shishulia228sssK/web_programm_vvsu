@@ -1,0 +1,55 @@
+{
+  "report": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "status": "passed",
+      "checks": [
+        "keyboard focus",
+        "register/login/logout/persistence",
+        "search and categories",
+        "roulette single and boundary split",
+        "blackjack",
+        "russian exchange",
+        "threecard Pair Plus",
+        "holdem check/bet",
+        "baccarat",
+        "dice invalid stake and recovery",
+        "mines reveal/cashout",
+        "slots",
+        "crash cashout",
+        "history",
+        "no overflow",
+        "no hidden active game fields"
+      ]
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": "passed",
+      "checks": [
+        "keyboard focus",
+        "register/login/logout/persistence",
+        "search and categories",
+        "roulette single and boundary split",
+        "blackjack",
+        "russian exchange",
+        "threecard Pair Plus",
+        "holdem check/bet",
+        "baccarat",
+        "dice invalid stake and recovery",
+        "mines reveal/cashout",
+        "slots",
+        "crash cashout",
+        "history",
+        "no overflow",
+        "no hidden active game fields"
+      ]
+    }
+  ],
+  "errors": []
+}

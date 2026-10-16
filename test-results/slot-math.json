@@ -1,0 +1,14 @@
+{
+  "rounds": 100000,
+  "stake": 100,
+  "totalCost": 10000000,
+  "totalPayout": 3561580,
+  "netPlayerResult": -6438420,
+  "anyPayoutCount": 47727,
+  "anyPayoutFrequency": 0.47727,
+  "profitableCount": 9662,
+  "profitableFrequency": 0.09662,
+  "freeSpins": 2736,
+  "bonuses": 21,
+  "note": "Empirical simulation of this implementation; no certified or theoretical RTP claim. Each round includes all awarded free spins and bonus picks."
+}

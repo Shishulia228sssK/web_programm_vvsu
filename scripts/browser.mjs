@@ -1,0 +1,90 @@
+import assert from 'node:assert/strict';
+import {mkdtemp,rm,mkdir,writeFile} from 'node:fs/promises';
+import os from 'node:os';
+import {existsSync} from 'node:fs';
+import path from 'node:path';
+import {chromium} from 'playwright';
+import {createApp} from '../server.js';
+const dataDir=await mkdtemp(path.join(os.tmpdir(),'neon-browser-'));
+const app=await createApp({dataDir});
+await new Promise(r=>app.server.listen(0,'127.0.0.1',r));
+const url=`http://127.0.0.1:${app.server.address().port}`;
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||(existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});
+const report=[];
+const errors=[];
+await mkdir('test-results',{recursive:true});
+try{
+ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
+  const mobile=viewport.width<500;
+  const context=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,reducedMotion:'reduce'});
+  const page=await context.newPage();
+  page.on('pageerror',e=>errors.push(e.message));
+  page.on('response',async r=>{if(r.url().includes('/api/')&&r.ok()){const value=await r.json().catch(()=>null);if(value){const raw=JSON.stringify(value);for(const field of ['passwordHash','"deck"','"salt"',...(!value.game?.done?['mineCells','crashPoint']:[])])if(raw.includes(field))errors.push(`Private field in API: ${field}`);}}});
+  await page.goto(url);
+  await page.waitForSelector('main > *');
+  await page.keyboard.press('Tab');assert.ok(await page.evaluate(()=>document.activeElement!==document.body),'Keyboard focus reaches control');
+  assert.equal(await page.title(),'NEON ARCADE — клуб виртуальных игр');
+  await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-lobby.png`,fullPage:true});
+  const username=mobile?'browser_mobile':'browser_desktop';
+  const clickRequest=async(selector,endpoint)=>{
+   const response=page.waitForResponse(r=>r.url().endsWith('/api/'+endpoint)&&r.request().method()==='POST');
+   await page.locator(selector).click();const r=await response;const body=await r.json();assert.equal(r.status(),200,JSON.stringify(body));
+   await page.waitForFunction(()=>!document.querySelector('#main').classList.contains('loading'));
+   return body;
+  };
+  await page.locator('#accountBtn').click();await page.locator('#authSwitch').click();
+  await page.locator('[name=username]').fill(username);await page.locator('[name=password]').fill('Browser-password-2026');
+  await clickRequest('#authSubmit','register');await page.waitForFunction(()=>!document.querySelector('#authDialog').open);
+  assert.match(await page.locator('#accountBtn').innerText(),new RegExp(username));
+  await page.locator('#search').fill('рулетка');assert.equal(await page.locator('[data-game]').count(),1);
+  await page.locator('#search').fill('несуществующая');assert.equal(await page.locator('[data-game]').count(),0);
+  await page.locator('#search').fill('');await page.locator('[data-category=cards]').click();assert.equal(await page.locator('[data-game]').count(),4);
+  await page.locator('[data-category=all]').click();assert.equal(await page.locator('[data-game]').count(),10);
+  const open=async type=>{console.log(`${mobile?'mobile':'desktop'}: ${type}`);if(await page.locator('#backBtn').count())await page.locator('#backBtn').click();await page.locator(`[data-game=${type}]`).click();};
+  const finish=async()=>{for(let i=0;i<100;i++){
+   const current=await (await context.request.get(url+'/api/me')).json();if(current.game.done)return current;
+   let selector;if(current.game.type==='blackjack')selector=current.game.phase==='insurance'?'[data-action=declineInsurance]':'[data-action=stand]';
+   else if(current.game.type==='slots')selector=current.game.bonusRounds?'[data-bonus="0"]':'[data-action=spin]';
+   else selector='[data-action=play]';await clickRequest(selector,'game/action');
+  }throw Error('Round did not terminate');};
+  await open('roulette');await page.locator('[data-chip="100"]').click();await page.locator('[data-numbers="17"]').click();await page.locator('.bet-spot[data-numbers="3,6"]').click();assert.match(await page.locator('.bet-list').textContent(),/3\/6/);
+  if(mobile){const sizes=await page.locator('.roulette-scroll').evaluate(e=>({scroll:e.scrollWidth,width:e.clientWidth}));assert.ok(sizes.scroll>sizes.width,'Mobile roulette scrolls inside its field');assert.ok(await page.locator('.roulette-number').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=14),'Mobile roulette numbers are readable');assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Roulette does not overflow page');}
+  const roulette=await clickRequest('#startBtn','game/start');assert.equal(roulette.game.done,true);assert.equal(roulette.game.totalCost,200);assert.equal(roulette.game.bets.length,2);
+  const wheel=await page.locator('.wheel-face').evaluate(e=>({degrees:parseFloat(e.style.getPropertyValue('--wheel-turn')),matrix:Array.from(new DOMMatrix(getComputedStyle(e).transform).toFloat64Array())}));
+  assert.ok(Math.abs(wheel.matrix[0]-Math.cos(wheel.degrees*Math.PI/180))<.001,'Wheel finishes at server result');
+  await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-roulette.png`,fullPage:true});
+  await open('blackjack');await clickRequest('#startBtn','game/start');await finish();
+  await open('russian');await clickRequest('#startBtn','game/start');await page.locator('[data-card="0"]').click();await clickRequest('[data-action=exchange]','game/action');await finish();
+  await open('threecard');await page.locator('#pairPlus').fill('10');await clickRequest('#startBtn','game/start');await finish();
+  await open('holdem');await clickRequest('#startBtn','game/start');await clickRequest('[data-action=check]','game/action');await clickRequest('[data-action=bet]','game/action');
+  await open('baccarat');await clickRequest('#startBtn','game/start');
+  await open('dice');
+  const beforeInvalid=await (await context.request.get(url+'/api/me')).json();
+  await page.locator('#bet').fill('15');
+  const invalidResponse=page.waitForResponse(r=>r.url().endsWith('/api/game/start')&&r.request().method()==='POST');
+  await page.locator('#startBtn').click();assert.equal((await invalidResponse).status(),400);
+  await page.waitForFunction(()=>!document.querySelector('#main').classList.contains('loading'));
+  const afterInvalid=await (await context.request.get(url+'/api/me')).json();
+  assert.equal(afterInvalid.user.balance,beforeInvalid.user.balance);assert.equal(afterInvalid.version,beforeInvalid.version);
+  assert.match(await page.locator('#toast').textContent(),/Ставка/);await page.locator('#bet').fill('100');
+  await page.locator('#threshold').fill('70');const dice=await clickRequest('#startBtn','game/start');assert.equal(dice.game.done,true);
+  await open('mines');await page.locator('#mines').selectOption('1');await clickRequest('#startBtn','game/start');
+  // Choose a safe cell from isolated server fixture so cashout is deterministic.
+  const safe=Array.from({length:25},(_,i)=>i).find(i=>!app.store.data.users[username].game.mineCells.includes(i));
+  const mine=await clickRequest(`[data-cell="${safe}"]`,'game/action');assert.equal(mine.game.revealed.length,1);assert.equal(mine.game.mineCells,undefined);
+  await clickRequest('[data-action=cashout]','game/action');
+  await open('slots');await clickRequest('#startBtn','game/start');await finish();
+  await open('crash');await clickRequest('#startBtn','game/start');await clickRequest('[data-action=cashout]','game/action');
+  await page.locator('#accountBtn').click();await clickRequest('#logoutBtn','logout');
+  await page.locator('#accountBtn').click();if(await page.locator('#authSubmit').innerText()==='Создать аккаунт')await page.locator('#authSwitch').click();await page.locator('[name=username]').fill(username);await page.locator('[name=password]').fill('Browser-password-2026');await clickRequest('#authSubmit','login');
+  await page.reload();await page.waitForFunction(()=>document.querySelector('#accountBtn').textContent.includes('browser_'));
+  const me=await (await context.request.get(url+'/api/me')).json();assert.equal(me.history.length,10);assert.equal(me.game.done,true);
+  if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),10);
+  assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Horizontal overflow');
+  await context.close();
+  report.push({viewport,status:'passed',checks:['keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','blackjack','russian exchange','threecard Pair Plus','holdem check/bet','baccarat','dice invalid stake and recovery','mines reveal/cashout','slots','crash cashout','history','no overflow','no hidden active game fields']});
+ }
+ assert.deepEqual(errors,[]);
+ await writeFile('test-results/browser.json',JSON.stringify({report,errors},null,2));
+ console.log(JSON.stringify({report,errors},null,2));
+}finally{await browser.close();await new Promise(r=>app.server.close(r));await app.store.close();await rm(dataDir,{recursive:true,force:true});}
