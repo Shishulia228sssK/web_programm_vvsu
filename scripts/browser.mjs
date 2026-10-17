@@ -47,9 +47,43 @@ try{
    else if(current.game.type==='slots')selector=current.game.bonusRounds?'[data-bonus="0"]':'[data-action=spin]';
    else selector='[data-action=play]';await clickRequest(selector,'game/action');
   }throw Error('Round did not terminate');};
-  await open('roulette');await page.locator('[data-chip="100"]').click();await page.locator('[data-numbers="17"]').click();await page.locator('.bet-spot[data-numbers="3,6"]').click();assert.match(await page.locator('.bet-list').textContent(),/3\/6/);
+  await open('roulette');await page.locator('[data-chip="100"]').click();
+  const seriesCases={
+   voisins:{chips:9,bets:[[[0,2,3],2],[[25,26,28,29],2],[[4,7],1],[[12,15],1],[[18,21],1],[[19,22],1],[[32,35],1]]},
+   tiers:{chips:6,bets:[[[5,8],1],[[10,11],1],[[13,16],1],[[23,24],1],[[27,30],1],[[33,36],1]]},
+   orphelins:{chips:5,bets:[[[1],1],[[6,9],1],[[14,17],1],[[17,20],1],[[31,34],1]]},
+   zero:{chips:4,bets:[[[26],1],[[0,3],1],[[12,15],1],[[32,35],1]]}
+  };
+  const money=text=>Number(text.replace(/[^0-9]/g,''));
+  for(const [name,expected] of Object.entries(seriesCases)){
+   await page.locator('#clearBet').click();
+   await page.locator(`[data-series="${name}"]`).click();
+   assert.equal(money(await page.locator('#cost').innerText()),expected.chips*100,`${name}: total stake`);
+   assert.equal(await page.locator('.roulette-board .chip-marker').count(),expected.bets.length,`${name}: every component has a chip on the board`);
+   for(const [numbers,count] of expected.bets){
+    const target=page.locator(`.roulette-board [data-numbers="${numbers.join(',')}"]`);
+    assert.equal(await target.locator('.chip-marker').innerText(),String(count*100));
+    const centered=await target.evaluate(e=>{const a=e.getBoundingClientRect(),b=e.querySelector('.chip-marker').getBoundingClientRect();return Math.abs(a.x+a.width/2-b.x-b.width/2)<1&&Math.abs(a.y+a.height/2-b.y-b.height/2)<1;});
+    assert.ok(centered,`${name}: ${numbers} chip centered on betting position`);
+    const onNumbers=await target.evaluate((e,numbers)=>{
+     const rects=numbers.filter(n=>n!==0).map(n=>document.querySelector(`.roulette-number[data-numbers="${n}"]`).getBoundingClientRect());
+     const r=e.getBoundingClientRect();
+     const x=numbers.includes(0)?rects[0].left:rects.reduce((s,r)=>s+r.x+r.width/2,0)/rects.length;
+     const y=rects.reduce((s,r)=>s+r.y+r.height/2,0)/rects.length;
+     return Math.abs(r.x+r.width/2-x)<1&&Math.abs(r.y+r.height/2-y)<1;
+    },numbers);
+    assert.ok(onNumbers,`${name}: ${numbers} position matches the covered cells`);
+   }
+  }
+  await page.locator('#clearBet').click();await page.locator('[data-numbers="17"]').click();await page.locator('.bet-spot[data-numbers="3,6"]').click();assert.match(await page.locator('.bet-list').textContent(),/3\/6/);
   if(mobile){const sizes=await page.locator('.roulette-scroll').evaluate(e=>({scroll:e.scrollWidth,width:e.clientWidth}));assert.ok(sizes.scroll>sizes.width,'Mobile roulette scrolls inside its field');assert.ok(await page.locator('.roulette-number').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=14),'Mobile roulette numbers are readable');assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Roulette does not overflow page');}
   const roulette=await clickRequest('#startBtn','game/start');assert.equal(roulette.game.done,true);assert.equal(roulette.game.totalCost,200);assert.equal(roulette.game.bets.length,2);
+  await page.locator('#clearBet').click();
+  await page.locator('[data-series="voisins"]').click();
+  assert.equal(money(await page.locator('#cost').innerText()),900,'New stake replaces previous round cost');
+  await page.locator('#clearBet').click();
+  await page.locator('[data-series="zero"]').click();
+  assert.equal(money(await page.locator('#cost').innerText()),400,'Zero series cost after completed round');
   const wheel=await page.locator('.wheel-face').evaluate(e=>({degrees:parseFloat(e.style.getPropertyValue('--wheel-turn')),matrix:Array.from(new DOMMatrix(getComputedStyle(e).transform).toFloat64Array())}));
   assert.ok(Math.abs(wheel.matrix[0]-Math.cos(wheel.degrees*Math.PI/180))<.001,'Wheel finishes at server result');
   await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-roulette.png`,fullPage:true});
@@ -82,7 +116,7 @@ try{
   if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),10);
   assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Horizontal overflow');
   await context.close();
-  report.push({viewport,status:'passed',checks:['keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','blackjack','russian exchange','threecard Pair Plus','holdem check/bet','baccarat','dice invalid stake and recovery','mines reveal/cashout','slots','crash cashout','history','no overflow','no hidden active game fields']});
+  report.push({viewport,status:'passed',checks:['all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','blackjack','russian exchange','threecard Pair Plus','holdem check/bet','baccarat','dice invalid stake and recovery','mines reveal/cashout','slots','crash cashout','history','no overflow','no hidden active game fields']});
  }
  assert.deepEqual(errors,[]);
  await writeFile('test-results/browser.json',JSON.stringify({report,errors},null,2));
