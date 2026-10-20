@@ -7,6 +7,11 @@
       },
       "status": "passed",
       "checks": [
+        "scene carousel and featured game navigation",
+        "light theme and persistence",
+        "320px layout and reduced motion",
+        "all four roulette series: positions, amounts and totals",
+        "new roulette stake after completed round",
         "keyboard focus",
         "register/login/logout/persistence",
         "search and categories",
@@ -32,6 +37,11 @@
       },
       "status": "passed",
       "checks": [
+        "scene carousel and featured game navigation",
+        "light theme and persistence",
+        "320px layout and reduced motion",
+        "all four roulette series: positions, amounts and totals",
+        "new roulette stake after completed round",
         "keyboard focus",
         "register/login/logout/persistence",
         "search and categories",

@@ -24,6 +24,28 @@ try{
   await page.waitForSelector('main > *');
   await page.keyboard.press('Tab');assert.ok(await page.evaluate(()=>document.activeElement!==document.body),'Keyboard focus reaches control');
   assert.equal(await page.title(),'NEON ARCADE — клуб виртуальных игр');
+  const sceneStyle=await context.request.get(url+'/scene.css');assert.equal(sceneStyle.status(),200,'Scene stylesheet served');
+  assert.equal(await page.locator('.scene-hero').evaluate(e=>getComputedStyle(e).display),'block','Scene layout stylesheet applied');
+  await page.locator('#sceneNext').click();assert.equal(await page.locator('#sceneCounter').innerText(),'02 / 04');
+  assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'blackjack');
+  await page.locator('#scenePrev').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'roulette');
+  if(!mobile){
+   await page.emulateMedia({reducedMotion:'no-preference'});
+   const area=await page.locator('#sceneViewport').boundingBox();
+   await page.mouse.move(area.x+area.width*.7,area.y+area.height*.6);
+   assert.notEqual(await page.locator('#sceneStack').evaluate(e=>e.style.getPropertyValue('--tilt-y')),'','Pointer moves the spatial card stack');
+   await page.emulateMedia({reducedMotion:'reduce'});
+   assert.equal(await page.locator('#sceneStack').evaluate(e=>getComputedStyle(e).transform),'none','Reduced motion disables parallax');
+  }
+  await page.locator('#themeBtn').click();assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+  await page.reload();await page.waitForSelector('.scene-hero');assert.equal(await page.locator('html').getAttribute('data-theme'),'light','Theme retained after reload');
+  await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-light.png`,fullPage:true});
+  await page.locator('#themeBtn').click();assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await page.locator('.scene-card-front').click();assert.ok(await page.locator('.roulette-board').isVisible(),'Featured card opens its game');
+  await page.locator('#backBtn').click();
+  assert.equal(await page.locator('.title-star').evaluate(e=>getComputedStyle(e).animationName),'none','Reduced motion disables decorative animation');
+  if(mobile){await page.setViewportSize({width:320,height:720});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'320px lobby has no overflow');await page.setViewportSize(viewport);}
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Lobby has no horizontal overflow');
   await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-lobby.png`,fullPage:true});
   const username=mobile?'browser_mobile':'browser_desktop';
   const clickRequest=async(selector,endpoint)=>{
@@ -116,7 +138,7 @@ try{
   if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),10);
   assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Horizontal overflow');
   await context.close();
-  report.push({viewport,status:'passed',checks:['all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','blackjack','russian exchange','threecard Pair Plus','holdem check/bet','baccarat','dice invalid stake and recovery','mines reveal/cashout','slots','crash cashout','history','no overflow','no hidden active game fields']});
+  report.push({viewport,status:'passed',checks:['scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','blackjack','russian exchange','threecard Pair Plus','holdem check/bet','baccarat','dice invalid stake and recovery','mines reveal/cashout','slots','crash cashout','history','no overflow','no hidden active game fields']});
  }
  assert.deepEqual(errors,[]);
  await writeFile('test-results/browser.json',JSON.stringify({report,errors},null,2));
