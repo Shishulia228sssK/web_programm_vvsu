@@ -14,10 +14,6 @@ Node.js не требует дополнительных пакетов для �
 
 Проверки: `npm test`; симуляция слотов: `node scripts/slot-math.mjs 100000`. Для браузерного QA: `npx playwright install chromium`, затем `npm run test:browser`. В облачной среде используется установленный `/usr/bin/chromium`; путь можно переопределить переменной `CHROMIUM_PATH`.
 
-## Telegram Mini App
-
-Подробный бесплатный запуск для **@Shishulia_bot** с Windows и Cloudflare Quick Tunnel: [TELEGRAM.md](TELEGRAM.md). Интерфейс и интеграция подготовлены; подключение настоящего бота выполняется по инструкции после получения HTTPS-ссылки.
-
 ## Настройка окружения
 
 | Переменная | Значение по умолчанию | Назначение |
