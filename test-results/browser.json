@@ -7,7 +7,7 @@
       },
       "status": "passed",
       "checks": [
-        "all ten results: slots nonmodal, other result windows",
+        "all ten results inline without automatic dialogs",
         "public leaderboard with current player",
         "compact slot coefficients and free spin rules",
         "scene carousel and featured game navigation",
@@ -42,7 +42,7 @@
       },
       "status": "passed",
       "checks": [
-        "all ten results: slots nonmodal, other result windows",
+        "all ten results inline without automatic dialogs",
         "public leaderboard with current player",
         "compact slot coefficients and free spin rules",
         "scene carousel and featured game navigation",

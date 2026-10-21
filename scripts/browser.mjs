@@ -53,9 +53,9 @@ try{
    await page.locator(selector).click();const r=await response;const body=await r.json();assert.equal(r.status(),200,JSON.stringify(body));
    await page.waitForFunction(()=>!document.querySelector('#main').classList.contains('loading'));
    if(body.game?.done&&endpoint.startsWith('game/')){
-    const slots=body.game.type==='slots';const result=page.locator(slots?'.slot-feedback':'#roundResultDialog .round-result');assert.equal(await page.locator('#roundResultDialog').evaluate(e=>e.open),!slots,'Slots stay nonmodal; other completed games open result window');
+    const slots=body.game.type==='slots';const result=page.locator(slots?'.slot-feedback':'.round-inline');assert.equal(await page.locator('#roundResultDialog').evaluate(e=>e.open),false,'All completed games stay nonmodal');
     if(!slots)assert.equal(Number(await result.getAttribute('data-cost')),body.game.totalCost);assert.equal(Number(await result.getAttribute('data-payout')),body.game.totalPayout);assert.equal(Number(await result.getAttribute('data-net')),body.game.totalPayout-body.game.totalCost);
-    assert.equal(Number(await result.getAttribute('data-stake')),body.game.originatingStake??body.game.bet);resultTypes.add(body.game.type);
+    assert.equal(Number(await result.getAttribute('data-stake')),body.game.originatingStake??body.game.bet);resultTypes.add(body.game.type);assert.equal(await page.locator(slots?'#slotQuickSpin':'#nextRound').count(),1);
    }
    if(await page.locator('#roundResultDialog').evaluate(e=>e.open))await page.locator('#roundResultContinue').click();
    return body;
@@ -143,7 +143,7 @@ try{
   const afterInvalid=await (await context.request.get(url+'/api/me')).json();
   assert.equal(afterInvalid.user.balance,beforeInvalid.user.balance);assert.equal(afterInvalid.version,beforeInvalid.version);
   assert.match(await page.locator('#toast').textContent(),/Ставка/);await page.locator('#bet').fill('100');
-  await page.locator('#threshold').fill('70');const dice=await clickRequest('#startBtn','game/start');assert.equal(dice.game.done,true);
+  await page.locator('#threshold').fill('70');const dice=await clickRequest('#startBtn','game/start');assert.equal(dice.game.done,true);const repeatedDice=await clickRequest('#nextRound','game/start');assert.equal(repeatedDice.game.type,'dice');assert.equal(repeatedDice.game.totalCost,dice.game.totalCost);
   await open('mines');await page.locator('#mines').selectOption('1');await clickRequest('#startBtn','game/start');
   // Choose a safe cell from isolated server fixture so cashout is deterministic.
   const safe=Array.from({length:25},(_,i)=>i).find(i=>!app.store.data.users[username].game.mineCells.includes(i));
@@ -164,11 +164,11 @@ try{
   await page.locator('#accountBtn').click();await clickRequest('#logoutBtn','logout');
   await page.locator('#accountBtn').click();if(await page.locator('#authSubmit').innerText()==='Создать аккаунт')await page.locator('#authSwitch').click();await page.locator('[name=username]').fill(username);await page.locator('[name=password]').fill('Browser-password-2026');await clickRequest('#authSubmit','login');
   await page.reload();await page.waitForFunction(()=>document.querySelector('#accountBtn').textContent.includes('browser_'));
-  const me=await (await context.request.get(url+'/api/me')).json();assert.equal(me.history.length,10);assert.equal(me.game.done,true);
-  if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),10);
+  const me=await (await context.request.get(url+'/api/me')).json();assert.equal(me.history.length,11);assert.equal(me.game.done,true);
+  if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),11);
   assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Horizontal overflow');
   await context.close();
-  report.push({viewport,status:'passed',checks:['all ten results: slots nonmodal, other result windows','public leaderboard with current player','compact slot coefficients and free spin rules','scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','single-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
+  report.push({viewport,status:'passed',checks:['all ten results inline without automatic dialogs','public leaderboard with current player','compact slot coefficients and free spin rules','scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','single-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
  }
  assert.deepEqual(errors,[]);assert.equal(resultTypes.size,10,'All ten games show correct result windows');
  await writeFile('test-results/browser.json',JSON.stringify({report,errors},null,2));
