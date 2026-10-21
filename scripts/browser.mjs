@@ -18,7 +18,7 @@ try{
   const mobile=viewport.width<500;
   const context=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,reducedMotion:'reduce'});
   const page=await context.newPage();
-  page.on('pageerror',e=>errors.push(e.message));
+  page.on('pageerror',e=>{errors.push(e.message);console.error('Browser error:',e.message);});
   page.on('response',async r=>{if(r.url().includes('/api/')&&r.ok()){const value=await r.json().catch(()=>null);if(value){const raw=JSON.stringify(value);for(const field of ['passwordHash','"deck"','"salt"',...(!value.game?.done?['mineCells','crashPoint']:[])])if(raw.includes(field))errors.push(`Private field in API: ${field}`);}}});
   await page.goto(url);
   await page.waitForSelector('main > *');
@@ -69,7 +69,12 @@ try{
    else if(current.game.type==='slots')selector=current.game.bonusRounds?'[data-bonus="0"]':'[data-action=spin]';
    else selector='[data-action=play]';await clickRequest(selector,'game/action');
   }throw Error('Round did not terminate');};
-  await open('roulette');await page.locator('[data-chip="100"]').click();
+  await open('roulette');
+  await page.locator('#clearBet').click();await page.locator('[data-chip="1"]').click();await page.locator('[data-numbers="17"]').click();assert.match(await page.locator('.bet-list').innerText(),/17 · 1/);
+  await page.locator('#clearBet').click();await page.locator('[data-chip="500"]').click();await page.locator('[data-numbers="17"]').click();await page.locator('[data-numbers="17"]').click();assert.equal(await page.locator('[data-numbers="17"] .chip-marker').innerText(),'500','Repeated chips cannot exceed inside cap');
+  await page.locator('#clearBet').click();await page.locator('[data-chip="25"]').click();await page.locator('.outside-bets [data-numbers]').first().click();assert.equal(Number((await page.locator('#cost').innerText()).replace(/\D/g,'')),25,'Outside minimum');
+  await page.locator('#clearBet').click();await page.locator('[data-chip="2000"]').click();await page.locator('.outside-bets [data-numbers]').first().click();await page.locator('.outside-bets [data-numbers]').first().click();assert.equal(Number((await page.locator('#cost').innerText()).replace(/\D/g,'')),2000,'Outside cap applies to aggregated chips');
+  await page.locator('#clearBet').click();await page.locator('[data-chip="100"]').click();
   const seriesCases={
    voisins:{chips:9,bets:[[[0,2,3],2],[[25,26,28,29],2],[[4,7],1],[[12,15],1],[[18,21],1],[[19,22],1],[[32,35],1]]},
    tiers:{chips:6,bets:[[[5,8],1],[[10,11],1],[[13,16],1],[[23,24],1],[[27,30],1],[[33,36],1]]},
@@ -109,11 +114,19 @@ try{
   const wheel=await page.locator('.wheel-face').evaluate(e=>({degrees:parseFloat(e.style.getPropertyValue('--wheel-turn')),matrix:Array.from(new DOMMatrix(getComputedStyle(e).transform).toFloat64Array())}));
   assert.ok(Math.abs(wheel.matrix[0]-Math.cos(wheel.degrees*Math.PI/180))<.001,'Wheel finishes at server result');
   await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-roulette.png`,fullPage:true});
-  await open('blackjack');await clickRequest('#startBtn','game/start');await finish();
+  await open('blackjack');assert.equal(await page.locator('.betting-box').count(),5);
+  await page.locator('#clearBoxes').click();await page.locator('[data-box="0"]').click();await page.locator('[data-box="2"]').click();
+  const blackjack=await clickRequest('#startBtn','game/start');assert.equal(blackjack.game.hands.length,2);assert.deepEqual(blackjack.game.hands.map(h=>h.box),[0,2]);assert.equal(blackjack.game.totalCost,200);
+  if(!blackjack.game.done){await page.reload();await page.waitForSelector('.betting-box');}
+  if(!blackjack.game.done)assert.ok(await page.locator('.box-active').count()===1||blackjack.game.phase==='insurance');
+  await finish();await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-blackjack-boxes.png`,fullPage:true});
   await open('russian');await clickRequest('#startBtn','game/start');await page.locator('[data-card="0"]').click();await clickRequest('[data-action=exchange]','game/action');await finish();
   await open('threecard');await page.locator('#pairPlus').fill('10');await clickRequest('#startBtn','game/start');await finish();
   await open('holdem');await clickRequest('#startBtn','game/start');await clickRequest('[data-action=check]','game/action');await clickRequest('[data-action=bet]','game/action');
-  await open('baccarat');await clickRequest('#startBtn','game/start');
+  await open('baccarat');assert.equal(await page.locator('.box-bet').count(),15);
+  await page.locator('#clearBoxes').click();await page.locator('[data-box="0"][data-box-side="player"]').click();await page.locator('[data-box="2"][data-box-side="banker"]').click();await page.locator('[data-box="4"][data-box-side="tie"]').click();
+  const baccarat=await clickRequest('#startBtn','game/start');assert.equal(baccarat.game.boxes.length,3);assert.equal(baccarat.game.totalCost,300);assert.equal(baccarat.game.totalPayout,baccarat.game.boxes.reduce((sum,b)=>sum+b.payout,0));
+  await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-baccarat-boxes.png`,fullPage:true});
   await open('dice');
   const beforeInvalid=await (await context.request.get(url+'/api/me')).json();
   await page.locator('#bet').fill('15');
@@ -129,7 +142,17 @@ try{
   const safe=Array.from({length:25},(_,i)=>i).find(i=>!app.store.data.users[username].game.mineCells.includes(i));
   const mine=await clickRequest(`[data-cell="${safe}"]`,'game/action');assert.equal(mine.game.revealed.length,1);assert.equal(mine.game.mineCells,undefined);
   await clickRequest('[data-action=cashout]','game/action');
-  await open('slots');await clickRequest('#startBtn','game/start');await finish();
+  await open('slots');await page.locator('#slotPayouts').click();await page.waitForSelector('.payout-table tbody tr');assert.equal(await page.locator('.payout-table tbody tr').count(),7);assert.match(await page.locator('#slotPayoutContent').innerText(),/150×/);assert.doesNotMatch(await page.locator('#slotPayoutContent').innerText(),/undefined/);assert.match(await page.locator('#slotPayoutContent').innerText(),/2× \/ 3× \/ 5×/);
+  await page.locator('#slotPayoutDialog .close').click();assert.equal(await page.locator('#slotPayoutDialog').evaluate(e=>e.open),false);
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  const slotRequest=clickRequest('#startBtn','game/start');await page.waitForSelector('.slot-machine.spinning');
+  assert.equal(await page.locator('.slot-reel').count(),5);assert.notEqual(await page.locator('.reel-strip').first().evaluate(e=>getComputedStyle(e).animationName),'none');
+  const slots=await slotRequest;assert.equal(await page.locator('.slot-machine.spinning').count(),0);
+  const symbols=['♠','♥','♦','♣','7','★','W','S'];
+  for(let col=0;col<5;col++)assert.deepEqual((await page.locator('.slot-reel').nth(col).locator('.slot-symbol').allTextContents()).slice(-3),slots.game.grid[col].map(n=>symbols[n]),'Reels end at actual server result');
+  assert.ok(await page.locator('.slot-reel').evaluateAll(reels=>reels.every(reel=>{const window=reel.getBoundingClientRect();return [...reel.querySelectorAll('.slot-symbol')].slice(-3).every(symbol=>{const r=symbol.getBoundingClientRect();return r.top>=window.top-1&&r.bottom<=window.bottom+1;});})),'Final server symbols are visibly inside the stopped reel windows');
+  await page.emulateMedia({reducedMotion:'reduce'});await finish();
+  await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-slots.png`,fullPage:true});
   await open('crash');await clickRequest('#startBtn','game/start');await clickRequest('[data-action=cashout]','game/action');
   await page.locator('#accountBtn').click();await clickRequest('#logoutBtn','logout');
   await page.locator('#accountBtn').click();if(await page.locator('#authSubmit').innerText()==='Создать аккаунт')await page.locator('#authSwitch').click();await page.locator('[name=username]').fill(username);await page.locator('[name=password]').fill('Browser-password-2026');await clickRequest('#authSubmit','login');
@@ -138,7 +161,7 @@ try{
   if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),10);
   assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Horizontal overflow');
   await context.close();
-  report.push({viewport,status:'passed',checks:['scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','blackjack','russian exchange','threecard Pair Plus','holdem check/bet','baccarat','dice invalid stake and recovery','mines reveal/cashout','slots','crash cashout','history','no overflow','no hidden active game fields']});
+  report.push({viewport,status:'passed',checks:['scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','multi-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
  }
  assert.deepEqual(errors,[]);
  await writeFile('test-results/browser.json',JSON.stringify({report,errors},null,2));

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {settleRoulette,rouletteSeries,startChanceGame,actChanceGame,publicChanceGame,WHEEL,SLOT_MATH} from '../lib/chance-games.js';
 test('wheel contains each European outcome exactly once',()=>assert.deepEqual([...WHEEL].sort((a,b)=>a-b),Array.from({length:37},(_,i)=>i)));
 test('every straight outcome pays gross 36x and loses elsewhere',()=>{for(let n=0;n<=36;n++)for(let outcome=0;outcome<=36;outcome++)assert.equal(settleRoulette([{numbers:[n],amount:10}],outcome),n===outcome?360:0);});
-test('legal inside and outside wagers pay correct gross totals for all outcomes',()=>{let groups=[[1,2],[0,1],[0,2,3],[1,2,3],[1,2,4,5],[0,1,2,3],[1,2,3,4,5,6],Array.from({length:12},(_,i)=>i+1),Array.from({length:12},(_,i)=>1+3*i),Array.from({length:18},(_,i)=>i+1),Array.from({length:18},(_,i)=>2*i+1)];for(let numbers of groups)for(let outcome=0;outcome<=36;outcome++)assert.equal(settleRoulette([{numbers,amount:10}],outcome),numbers.includes(outcome)?360/numbers.length:0);});
-test('invalid roulette layouts and stakes rejected',()=>{for(let numbers of [[1,3],[3,4],[1,2,4],[0,4],[1,1],[],[37],[1,2,3,5]])assert.throws(()=>settleRoulette([{numbers,amount:10}],1));for(let amount of [0,11,NaN,-10])assert.throws(()=>settleRoulette([{numbers:[1],amount}],1));});
+test('legal inside and outside wagers pay correct gross totals for all outcomes',()=>{let groups=[[1,2],[0,1],[0,2,3],[1,2,3],[1,2,4,5],[0,1,2,3],[1,2,3,4,5,6],Array.from({length:12},(_,i)=>i+1),Array.from({length:12},(_,i)=>1+3*i),Array.from({length:18},(_,i)=>i+1),Array.from({length:18},(_,i)=>2*i+1)];for(let numbers of groups)for(let outcome=0;outcome<=36;outcome++)assert.equal(settleRoulette([{numbers,amount:100}],outcome),numbers.includes(outcome)?3600/numbers.length:0);});
+test('invalid roulette layouts and stakes rejected',()=>{for(let numbers of [[1,3],[3,4],[1,2,4],[0,4],[1,1],[],[37],[1,2,3,5]])assert.throws(()=>settleRoulette([{numbers,amount:10}],1));for(let amount of [0,1.5,NaN,-10])assert.throws(()=>settleRoulette([{numbers:[1],amount}],1));});
 test('named wheel series validate and neighbors wrap',()=>{for(let name of ['voisins','tiers','orphelins','zero','neighbors'])for(let n=0;n<37;n++)assert.doesNotThrow(()=>settleRoulette(rouletteSeries(name,10,n),n));assert.equal(rouletteSeries('neighbors',10,0).length,5);});
 test('mines redacts hidden cells and cashout settles once',()=>{let {state,cost}=startChanceGame('mines',100,{mines:3});assert.equal(cost,100);assert.equal(publicChanceGame(state).mineCells,undefined);let safe=Array.from({length:25},(_,i)=>i).find(i=>!state.mineCells.includes(i));actChanceGame(state,'reveal',{cell:safe});let paid=actChanceGame(state,'cashout');assert.ok(paid.payout>100);assert.throws(()=>actChanceGame(state,'cashout'));});
 test('crash auto collect wins before crash; late manual loses',()=>{let {state}=startChanceGame('crash',100,{autoCashout:2});state.crashPoint=3;state.startedAt=Date.now()-20000;assert.equal(actChanceGame(state,'cashout').payout,200);let late=startChanceGame('crash',100).state;late.crashPoint=1.1;late.startedAt=Date.now()-20000;assert.equal(actChanceGame(late,'cashout').payout,0);});
@@ -27,8 +27,8 @@ test('exhaustive table wagers independently cover every legal layout and all 37 
  const all=Array.from({length:36},(_,i)=>i+1);
  layouts.push(red,all.filter(n=>!red.includes(n)),all.filter(n=>n%2===0),all.filter(n=>n%2===1),all.slice(0,18),all.slice(18));
  assert.equal(layouts.length,157);
- const gross={1:360,2:180,3:120,4:90,6:60,12:30,18:20};
- for(const numbers of layouts){let aggregate=0;for(let outcome=0;outcome<=36;outcome++){const paid=settleRoulette([{numbers,amount:10}],outcome);assert.equal(paid,numbers.includes(outcome)?gross[numbers.length]:0,`${numbers} at ${outcome}`);aggregate+=paid;}assert.equal(aggregate,360);}
+ const gross={1:3600,2:1800,3:1200,4:900,6:600,12:300,18:200};
+ for(const numbers of layouts){let aggregate=0;for(let outcome=0;outcome<=36;outcome++){const paid=settleRoulette([{numbers,amount:100}],outcome);assert.equal(paid,numbers.includes(outcome)?gross[numbers.length]:0,`${numbers} at ${outcome}`);aggregate+=paid;}assert.equal(aggregate,3600);}
 });
 test('all wheel-series component wagers, chip totals, and payouts independently match',()=>{
  const definitions={
@@ -49,4 +49,19 @@ test('all wheel-series component wagers, chip totals, and payouts independently 
   assert.equal(actual.length,5);assert.equal(actual.reduce((s,b)=>s+b.amount,0),50);assert.deepEqual(actual.map(b=>b.numbers[0]),expected);
   for(let outcome=0;outcome<=36;outcome++)assert.equal(settleRoulette(actual,outcome),expected.includes(outcome)?360:0);
  }
+});
+
+test('roulette enforces integer limits on aggregated positions including reversed splits',async()=>{
+ const {validateRoulette}=await import('../lib/chance-games.js');
+ for(const amount of [1,500])assert.equal(validateRoulette([{numbers:[17],amount}]),amount);
+ for(const amount of [0,.5,501])assert.throws(()=>validateRoulette([{numbers:[17],amount}]));
+ for(const numbers of [Array.from({length:18},(_,i)=>i+1),Array.from({length:12},(_,i)=>i+1)]){
+  for(const amount of [25,2000])assert.equal(validateRoulette([{numbers,amount}]),amount);
+  for(const amount of [24,2001])assert.throws(()=>validateRoulette([{numbers,amount}]));
+ }
+ assert.equal(validateRoulette([{numbers:[1,2],amount:250},{numbers:[2,1],amount:250}]),500);
+ assert.throws(()=>validateRoulette([{numbers:[1,2],amount:300},{numbers:[2,1],amount:201}]));
+ assert.equal(settleRoulette([{numbers:[17],amount:1}],17),36);
+ assert.equal(startChanceGame('roulette',1,{bets:[{numbers:[0],amount:1}]}).cost,1);
+ assert.throws(()=>startChanceGame('roulette',100,{bets:[{numbers:[0],amount:1}]}));
 });
