@@ -73,10 +73,10 @@ test('multi-box input rejects duplicates, invalid seats, totals and fractional c
  for(const boxes of [[{box:5,bet:20}],[{box:0,bet:10},{box:0,bet:10}],[{box:1,bet:10}],[{box:1,bet:1.5}]])assert.throws(()=>startCardGame('blackjack',20,{boxes}));
  assert.throws(()=>startCardGame('baccarat',30,{boxes:[{box:0,selection:'banker',bet:30}]}));
  assert.throws(()=>startCardGame('baccarat',20,{boxes:[{box:0,selection:'bogus',bet:20}]}));
- for(const type of ['blackjack','baccarat']){const r=startCardGame(type,60,{boxes:[{box:0,bet:20},{box:4,bet:40}]});assert.equal(r.cost,60);assert.equal(r.state.boxes.length,2);assert.equal(publicCardGame(r.state).deck,undefined);}
+ for(const type of ['blackjack','baccarat']){const boxes=type==='blackjack'?[{box:0,bet:20},{box:4,bet:40}]:[{box:0,bet:20,selection:'player'},{box:0,bet:40,selection:'banker'}];const r=startCardGame(type,60,{boxes});assert.equal(r.cost,60);assert.equal(r.state.boxes.length,2);assert.equal(publicCardGame(r.state).deck,undefined);}
 });
 test('baccarat all boxes use the same outcome and sum per-side payouts exactly',()=>{
- const boxes=[{box:0,selection:'player',bet:100},{box:1,selection:'banker',bet:100},{box:4,selection:'tie',bet:100}];
+ const boxes=[{box:0,selection:'player',bet:100},{box:0,selection:'banker',bet:100},{box:0,selection:'tie',bet:100}];
  for(let i=0;i<100;i++){const r=startCardGame('baccarat',300,{boxes});const winner=r.state.outcome;const expected=winner==='tie'?[100,100,900]:winner==='player'?[200,0,0]:[0,195,0];assert.deepEqual(r.state.boxes.map(b=>b.payout),expected);assert.equal(r.payout,expected.reduce((a,b)=>a+b,0));assert.equal(r.cost,300);}
 });
 
@@ -94,4 +94,13 @@ test('baccarat pairs compare original ranks, not zero-point values or a third ca
  const a={type:'baccarat',bet:10,deck:[],player:[c(10),c(13)],dealer:[c(4),c(4)],boxes:[{box:0,selection:'playerPair',bet:10}]};settleBaccarat(a);assert.equal(a.playerPair,false);assert.equal(a.payout,0);
  const b={type:'baccarat',bet:10,deck:[c(2)],player:[c(2),c(3)],dealer:[c(4),c(3)],boxes:[{box:0,selection:'playerPair',bet:10}]};settleBaccarat(b);assert.equal(b.player.length,3);assert.equal(b.playerPair,false);assert.equal(b.payout,0);
  const r=startCardGame('baccarat',10,{selection:'playerPair'});assert.equal(r.cost,10);assert.equal(r.state.boxes[0].selection,'playerPair');
+});
+
+test('baccarat accepts all five bet types only on its single box',()=>{
+ const boxes=['player','banker','tie','playerPair','bankerPair'].map(selection=>({box:0,selection,bet:20}));const r=startCardGame('baccarat',100,{boxes});assert.equal(r.cost,100);assert.equal(r.state.boxes.length,5);
+ assert.throws(()=>startCardGame('baccarat',20,{boxes:[{box:1,selection:'player',bet:20}]}));
+});
+test('Russian poker exchanges any one to five selected cards for one ante, or buys a sixth',()=>{
+ for(let count=1;count<=5;count++){const s=startCardGame('russian',100).state,original=structuredClone(s.player),indices=Array.from({length:count},(_,i)=>i),r=actCardGame(s,'exchange',{indices});assert.equal(r.cost,100);assert.equal(r.state.player.length,5);assert.deepEqual(s.player,original);for(let i=0;i<5;i++)if(indices.includes(i))assert.notDeepEqual(r.state.player[i],original[i]);else assert.deepEqual(r.state.player[i],original[i]);assert.throws(()=>actCardGame(r.state,'sixth'));assert.throws(()=>actCardGame(r.state,'exchange',{indices:[0]}));}
+ const s=startCardGame('russian',100).state,r=actCardGame(s,'sixth');assert.equal(r.cost,100);assert.equal(r.state.player.length,6);assert.deepEqual(r.state.player.slice(0,5),s.player);assert.throws(()=>actCardGame(r.state,'exchange',{indices:[0]}));
 });

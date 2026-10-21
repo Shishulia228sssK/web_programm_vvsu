@@ -53,8 +53,8 @@ try{
    await page.locator(selector).click();const r=await response;const body=await r.json();assert.equal(r.status(),200,JSON.stringify(body));
    await page.waitForFunction(()=>!document.querySelector('#main').classList.contains('loading'));
    if(body.game?.done&&endpoint.startsWith('game/')){
-    const result=page.locator('#roundResultDialog .round-result');assert.equal(await page.locator('#roundResultDialog').evaluate(e=>e.open),true,'Completed game opens result window');
-    assert.equal(Number(await result.getAttribute('data-cost')),body.game.totalCost);assert.equal(Number(await result.getAttribute('data-payout')),body.game.totalPayout);assert.equal(Number(await result.getAttribute('data-net')),body.game.totalPayout-body.game.totalCost);
+    const slots=body.game.type==='slots';const result=page.locator(slots?'.slot-feedback':'#roundResultDialog .round-result');assert.equal(await page.locator('#roundResultDialog').evaluate(e=>e.open),!slots,'Slots stay nonmodal; other completed games open result window');
+    if(!slots)assert.equal(Number(await result.getAttribute('data-cost')),body.game.totalCost);assert.equal(Number(await result.getAttribute('data-payout')),body.game.totalPayout);assert.equal(Number(await result.getAttribute('data-net')),body.game.totalPayout-body.game.totalCost);
     assert.equal(Number(await result.getAttribute('data-stake')),body.game.originatingStake??body.game.bet);resultTypes.add(body.game.type);
    }
    if(await page.locator('#roundResultDialog').evaluate(e=>e.open))await page.locator('#roundResultContinue').click();
@@ -130,8 +130,8 @@ try{
   await open('russian');await clickRequest('#startBtn','game/start');await page.locator('[data-card="0"]').click();await clickRequest('[data-action=exchange]','game/action');await finish();
   await open('threecard');await page.locator('#pairPlus').fill('10');await clickRequest('#startBtn','game/start');await finish();
   await open('holdem');await clickRequest('#startBtn','game/start');await clickRequest('[data-action=check]','game/action');await clickRequest('[data-action=bet]','game/action');
-  await open('baccarat');assert.equal(await page.locator('.box-bet').count(),25);
-  await page.locator('#clearBoxes').click();await page.locator('[data-box="0"][data-box-side="player"]').click();await page.locator('[data-box="2"][data-box-side="banker"]').click();await page.locator('[data-box="4"][data-box-side="tie"]').click();
+  await open('baccarat');assert.equal(await page.locator('.box-bet').count(),5);
+  await page.locator('#clearBoxes').click();await page.locator('[data-box="0"][data-box-side="player"]').click();await page.locator('[data-box="0"][data-box-side="banker"]').click();await page.locator('[data-box="0"][data-box-side="tie"]').click();
   const baccarat=await clickRequest('#startBtn','game/start');assert.equal(baccarat.game.boxes.length,3);assert.equal(baccarat.game.totalCost,300);assert.equal(baccarat.game.totalPayout,baccarat.game.boxes.reduce((sum,b)=>sum+b.payout,0));
   await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-baccarat-boxes.png`,fullPage:true});
   await open('dice');
@@ -168,7 +168,7 @@ try{
   if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),10);
   assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Horizontal overflow');
   await context.close();
-  report.push({viewport,status:'passed',checks:['all ten result windows: stake, payout and net','public leaderboard with current player','compact slot coefficients and free spin rules','scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','multi-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
+  report.push({viewport,status:'passed',checks:['all ten results: slots nonmodal, other result windows','public leaderboard with current player','compact slot coefficients and free spin rules','scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','single-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
  }
  assert.deepEqual(errors,[]);assert.equal(resultTypes.size,10,'All ten games show correct result windows');
  await writeFile('test-results/browser.json',JSON.stringify({report,errors},null,2));

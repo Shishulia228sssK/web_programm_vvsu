@@ -26,7 +26,7 @@ test('roulette API allows one coin and rejects per-position limit bypass without
 });
 test('multi-box API charges actual total once and exposes payouts without deck',async t=>{
  const app=await fixture(t);t.after(()=>rm(app.dir,{recursive:true,force:true}));const {cookie}=await register(app);
- const body={type:'baccarat',bet:300,options:{boxes:[{box:0,bet:100,selection:'player'},{box:2,bet:100,selection:'banker'},{box:4,bet:100,selection:'tie'}]},version:0,requestId:'baccarat-boxes-01'};
+ const body={type:'baccarat',bet:300,options:{boxes:[{box:0,bet:100,selection:'player'},{box:0,bet:100,selection:'banker'},{box:0,bet:100,selection:'tie'}]},version:0,requestId:'baccarat-boxes-01'};
  const r=await request(app,'/api/game/start',body,cookie);assert.equal(r.status,200);assert.equal(r.body.game.boxes.length,3);assert.equal(r.body.game.totalCost,300);assert.equal(r.body.game.totalPayout,r.body.game.boxes.reduce((s,b)=>s+b.payout,0));assert.equal(r.body.user.balance,49700+r.body.game.totalPayout);assert.equal(r.body.game.deck,undefined);assert.equal((await request(app,'/api/game/start',body,cookie)).body.user.balance,r.body.user.balance);
  const invalid=await request(app,'/api/game/start',{type:'blackjack',bet:100,options:{boxes:[{box:0,bet:100},{box:1,bet:100}]},version:r.body.version,requestId:'blackjack-total-01'},cookie);assert.equal(invalid.status,400);
  const valid=await request(app,'/api/game/start',{type:'blackjack',bet:200,options:{boxes:[{box:0,bet:100},{box:1,bet:100}]},version:r.body.version,requestId:'blackjack-boxes-01'},cookie);assert.equal(valid.status,200);assert.equal(valid.body.game.hands.length,2);assert.equal(valid.body.game.totalCost,200);assert.equal(valid.body.game.deck,undefined);
@@ -49,4 +49,11 @@ test('baccarat pair results persist in an authenticated personal history exactly
  await request(app,'/api/game/start',body,cookie);const stats=await request(app,'/api/baccarat-stats',undefined,cookie);assert.equal(stats.status,200);assert.equal(stats.body.rounds.length,1);assert.equal(stats.body.rounds[0].outcome,r.body.game.outcome);assert.equal(stats.body.rounds[0].playerPair,r.body.game.playerPair);assert.equal(stats.body.rounds[0].bankerPair,r.body.game.bankerPair);
  const other=await register(app,'other_history');assert.deepEqual((await request(app,'/api/baccarat-stats',undefined,other.cookie)).body.rounds,[]);
  await new Promise(r=>app.server.close(r));await app.store.close();const restored=await fixture(t,app.dir);assert.deepEqual((await request(restored,'/api/baccarat-stats',undefined,cookie)).body.rounds,stats.body.rounds);
+});
+
+test('Telegram HTTPS cookie mode requires Secure and allows only trusted frame origins',async t=>{
+ await assert.rejects(createApp({secure:false,sameSite:'None'}),/COOKIE_SECURE/);
+ const dir=await mkdtemp(path.join(os.tmpdir(),'ludka-telegram-')),app=await createApp({dataDir:dir,secure:true,sameSite:'None'});await new Promise(r=>app.server.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>app.server.close(r));await app.store.close();await rm(dir,{recursive:true,force:true});});
+ const url=`http://127.0.0.1:${app.server.address().port}`,r=await fetch(url+'/api/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:'tg_cookie',password:'test-cookie-password'})});assert.equal(r.status,200);assert.match(r.headers.get('set-cookie'),/SameSite=None/);assert.match(r.headers.get('set-cookie'),/; Secure/);assert.match(r.headers.get('content-security-policy'),/frame-ancestors 'self' https:\/\/web.telegram.org/);assert.match(r.headers.get('content-security-policy'),/script-src 'self' https:\/\/telegram.org/);
+ assert.equal((await fetch(url+'/telegram.js')).status,200);
 });

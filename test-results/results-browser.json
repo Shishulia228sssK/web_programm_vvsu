@@ -7,8 +7,10 @@
       },
       "status": "passed",
       "checks": [
+        "Russian poker exchange all five and sixth-card alternative",
+        "Telegram SDK safe area and native back mock",
         "bonus progress persists",
-        "award modal",
+        "manual bonus info and nonmodal quick spin",
         "free-spin payouts credited without new stake",
         "final bonus total",
         "win/loss/push and partial-return windows",
@@ -27,8 +29,10 @@
       },
       "status": "passed",
       "checks": [
+        "Russian poker exchange all five and sixth-card alternative",
+        "Telegram SDK safe area and native back mock",
         "bonus progress persists",
-        "award modal",
+        "manual bonus info and nonmodal quick spin",
         "free-spin payouts credited without new stake",
         "final bonus total",
         "win/loss/push and partial-return windows",
