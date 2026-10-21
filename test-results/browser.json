@@ -7,6 +7,9 @@
       },
       "status": "passed",
       "checks": [
+        "all ten result windows: stake, payout and net",
+        "public leaderboard with current player",
+        "compact slot coefficients and free spin rules",
         "scene carousel and featured game navigation",
         "light theme and persistence",
         "320px layout and reduced motion",
@@ -39,6 +42,9 @@
       },
       "status": "passed",
       "checks": [
+        "all ten result windows: stake, payout and net",
+        "public leaderboard with current player",
+        "compact slot coefficients and free spin rules",
         "scene carousel and featured game navigation",
         "light theme and persistence",
         "320px layout and reduced motion",

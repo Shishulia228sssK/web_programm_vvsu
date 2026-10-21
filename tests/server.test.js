@@ -32,3 +32,21 @@ test('multi-box API charges actual total once and exposes payouts without deck',
  const valid=await request(app,'/api/game/start',{type:'blackjack',bet:200,options:{boxes:[{box:0,bet:100},{box:1,bet:100}]},version:r.body.version,requestId:'blackjack-boxes-01'},cookie);assert.equal(valid.status,200);assert.equal(valid.body.game.hands.length,2);assert.equal(valid.body.game.totalCost,200);assert.equal(valid.body.game.deck,undefined);
  await new Promise(r=>app.server.close(r));await app.store.close();const restored=await fixture(t,app.dir);const me=await request(restored,'/api/me',undefined,cookie);assert.equal(me.body.game.hands.length,2);assert.equal(me.body.version,valid.body.version);assert.equal(me.body.user.balance,valid.body.user.balance);
 });
+
+test('public leaderboard sorts balances and exposes only rank, username and balance',async t=>{
+ const app=await fixture(t);t.after(()=>rm(app.dir,{recursive:true,force:true}));
+ const empty=await request(app,'/api/leaderboard');assert.equal(empty.status,200);assert.deepEqual(empty.body,{totalPlayers:0,players:[]});
+ for(const name of ['first_player','second_player','third_player'])await register(app,name);
+ await app.store.transaction(d=>{d.users.first_player.balance=100;d.users.second_player.balance=300;d.users.third_player.balance=200;});
+ const r=await request(app,'/api/leaderboard');assert.equal(r.status,200);assert.equal(r.body.totalPlayers,3);assert.deepEqual(r.body.players.map(p=>p.username),['second_player','third_player','first_player']);assert.deepEqual(r.body.players.map(p=>p.rank),[1,2,3]);
+ for(const p of r.body.players)assert.deepEqual(Object.keys(p).sort(),['balance','rank','username']);
+});
+
+test('baccarat pair results persist in an authenticated personal history exactly once',async t=>{
+ const app=await fixture(t);t.after(()=>rm(app.dir,{recursive:true,force:true}));assert.equal((await request(app,'/api/baccarat-stats')).status,401);
+ const {cookie}=await register(app,'pair_history');const body={type:'baccarat',bet:20,options:{boxes:[{box:0,selection:'playerPair',bet:10},{box:0,selection:'bankerPair',bet:10}]},version:0,requestId:'pair-history-0001'};
+ const r=await request(app,'/api/game/start',body,cookie);assert.equal(r.status,200);assert.equal(r.body.game.totalCost,20);for(const b of r.body.game.boxes)assert.ok([0,120].includes(b.payout));
+ await request(app,'/api/game/start',body,cookie);const stats=await request(app,'/api/baccarat-stats',undefined,cookie);assert.equal(stats.status,200);assert.equal(stats.body.rounds.length,1);assert.equal(stats.body.rounds[0].outcome,r.body.game.outcome);assert.equal(stats.body.rounds[0].playerPair,r.body.game.playerPair);assert.equal(stats.body.rounds[0].bankerPair,r.body.game.bankerPair);
+ const other=await register(app,'other_history');assert.deepEqual((await request(app,'/api/baccarat-stats',undefined,other.cookie)).body.rounds,[]);
+ await new Promise(r=>app.server.close(r));await app.store.close();const restored=await fixture(t,app.dir);assert.deepEqual((await request(restored,'/api/baccarat-stats',undefined,cookie)).body.rounds,stats.body.rounds);
+});

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {blackjackValue,pokerRank,threeCardRank,createDeck} from '../lib/cards.js';
-import {startCardGame,actCardGame,publicCardGame,baccaratBankerDraws} from '../lib/card-games.js';
+import {startCardGame,actCardGame,publicCardGame,baccaratBankerDraws,settleBaccarat} from '../lib/card-games.js';
 const c=(rank,suit='♠')=>({rank,suit});
 test('shuffled deck has all unique cards',()=>{const d=createDeck();assert.equal(d.length,52);assert.equal(new Set(d.map(x=>x.rank+x.suit)).size,52);});
 test('ace totals and wheel straight',()=>{assert.equal(blackjackValue([c(14),c(14),c(9)]).total,21);assert.deepEqual(pokerRank([c(14),c(2),c(3),c(4),c(5)]),[8,5]);assert.deepEqual(threeCardRank([c(14),c(2),c(3)]),[5,3]);});
@@ -83,4 +83,15 @@ test('baccarat all boxes use the same outcome and sum per-side payouts exactly',
 test('blackjack can split two separate boxes against the same dealer',()=>{
  const s=bj([c(8),c(8)],[c(10),c(8)],[c(4),c(3),c(2),c(2)]);s.bet=40;s.hands[0].box=0;s.hands.push({box:1,cards:[c(7),c(7)],bet:20,stood:false});
  let r=actCardGame(s,'split');r=actCardGame(r.state,'stand');r=actCardGame(r.state,'stand');assert.equal(r.state.active,2);r=actCardGame(r.state,'split');assert.equal(r.cost,20);assert.deepEqual(r.state.hands.map(h=>h.box),[0,0,1,1]);r=actCardGame(r.state,'stand');r=actCardGame(r.state,'stand');assert.equal(r.done,true);assert.equal(r.payout,0);
+});
+
+test('baccarat pairs pay 11:1 net independently of the main outcome',()=>{
+ const s={type:'baccarat',bet:60,deck:[],player:[c(4),c(4,'♥')],dealer:[c(3),c(3,'♥')],boxes:[{box:0,selection:'playerPair',bet:10},{box:1,selection:'bankerPair',bet:10},{box:2,selection:'player',bet:10},{box:3,selection:'banker',bet:20},{box:4,selection:'tie',bet:10}]};
+ settleBaccarat(s);assert.equal(s.playerPair,true);assert.equal(s.bankerPair,true);assert.equal(s.outcome,'player');assert.deepEqual(s.boxes.map(b=>b.payout),[120,120,20,0,0]);assert.equal(s.payout,260);
+ const tie={type:'baccarat',bet:20,deck:[],player:[c(4),c(4,'♥')],dealer:[c(10),c(8)],boxes:[{box:0,selection:'playerPair',bet:10},{box:1,selection:'bankerPair',bet:10}]};settleBaccarat(tie);assert.equal(tie.outcome,'tie');assert.deepEqual(tie.boxes.map(b=>b.payout),[120,0]);
+});
+test('baccarat pairs compare original ranks, not zero-point values or a third card',()=>{
+ const a={type:'baccarat',bet:10,deck:[],player:[c(10),c(13)],dealer:[c(4),c(4)],boxes:[{box:0,selection:'playerPair',bet:10}]};settleBaccarat(a);assert.equal(a.playerPair,false);assert.equal(a.payout,0);
+ const b={type:'baccarat',bet:10,deck:[c(2)],player:[c(2),c(3)],dealer:[c(4),c(3)],boxes:[{box:0,selection:'playerPair',bet:10}]};settleBaccarat(b);assert.equal(b.player.length,3);assert.equal(b.playerPair,false);assert.equal(b.payout,0);
+ const r=startCardGame('baccarat',10,{selection:'playerPair'});assert.equal(r.cost,10);assert.equal(r.state.boxes[0].selection,'playerPair');
 });

@@ -65,3 +65,16 @@ test('roulette enforces integer limits on aggregated positions including reverse
  assert.equal(startChanceGame('roulette',1,{bets:[{numbers:[0],amount:1}]}).cost,1);
  assert.throws(()=>startChanceGame('roulette',100,{bets:[{numbers:[0],amount:1}]}));
 });
+
+test('scatter combinations award free spins and payouts scale with original stake',async()=>{
+ const {evaluateSlotGrid}=await import('../lib/chance-games.js');
+ const grid=[[7,0,0],[7,0,0],[7,0,0],[0,0,0],[0,0,0]];
+ const a=evaluateSlotGrid(grid,100),b=evaluateSlotGrid(grid,200);assert.equal(a.freeSpins,8);assert.equal(a.scatters,3);assert.equal(b.payout,a.payout*2);
+ assert.equal(evaluateSlotGrid(grid,100,3).payout,a.payout*3);
+});
+test('slot bonus accounting survives serialization and never charges free spins',()=>{
+ let s=startChanceGame('slots',200).state;
+ Object.assign(s,{done:false,freeSpins:1,bonusRounds:0,freeSpinPayout:75,bonusPickPayout:0,freeSpinsPlayed:2,freeSpinsAwarded:3});
+ s=JSON.parse(JSON.stringify(s));const r=actChanceGame(s,'spin');assert.equal(r.cost,0);assert.equal(s.originatingStake,200);assert.equal(s.freeSpinsPlayed,3);assert.equal(s.freeSpinPayout,75+r.payout);assert.equal(s.lastSpinPayout,r.payout);assert.equal(s.freeSpins,s.lastFreeSpinsAwarded);assert.equal(s.freeSpinsAwarded,3+s.lastFreeSpinsAwarded);
+ s.done=false;s.bonusRounds=1;const bonus=actChanceGame(s,'bonus',{pick:0});assert.equal(bonus.cost,0);assert.equal(s.bonusPickPayout,bonus.payout);assert.ok([400,600,1000].includes(bonus.payout));assert.equal(s.lastFreeSpinsAwarded,0);
+});

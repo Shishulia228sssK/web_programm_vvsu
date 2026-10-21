@@ -11,7 +11,7 @@ await new Promise(r=>app.server.listen(0,'127.0.0.1',r));
 const url=`http://127.0.0.1:${app.server.address().port}`;
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||(existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});
 const report=[];
-const errors=[];
+const errors=[],resultTypes=new Set();
 await mkdir('test-results',{recursive:true});
 try{
  for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
@@ -23,7 +23,7 @@ try{
   await page.goto(url);
   await page.waitForSelector('main > *');
   await page.keyboard.press('Tab');assert.ok(await page.evaluate(()=>document.activeElement!==document.body),'Keyboard focus reaches control');
-  assert.equal(await page.title(),'NEON ARCADE — клуб виртуальных игр');
+  assert.equal(await page.title(),'ЛУДКА.COM — клуб виртуальных игр');
   const sceneStyle=await context.request.get(url+'/scene.css');assert.equal(sceneStyle.status(),200,'Scene stylesheet served');
   assert.equal(await page.locator('.scene-hero').evaluate(e=>getComputedStyle(e).display),'block','Scene layout stylesheet applied');
   await page.locator('#sceneNext').click();assert.equal(await page.locator('#sceneCounter').innerText(),'02 / 04');
@@ -52,12 +52,19 @@ try{
    const response=page.waitForResponse(r=>r.url().endsWith('/api/'+endpoint)&&r.request().method()==='POST');
    await page.locator(selector).click();const r=await response;const body=await r.json();assert.equal(r.status(),200,JSON.stringify(body));
    await page.waitForFunction(()=>!document.querySelector('#main').classList.contains('loading'));
+   if(body.game?.done&&endpoint.startsWith('game/')){
+    const result=page.locator('#roundResultDialog .round-result');assert.equal(await page.locator('#roundResultDialog').evaluate(e=>e.open),true,'Completed game opens result window');
+    assert.equal(Number(await result.getAttribute('data-cost')),body.game.totalCost);assert.equal(Number(await result.getAttribute('data-payout')),body.game.totalPayout);assert.equal(Number(await result.getAttribute('data-net')),body.game.totalPayout-body.game.totalCost);
+    assert.equal(Number(await result.getAttribute('data-stake')),body.game.originatingStake??body.game.bet);resultTypes.add(body.game.type);
+   }
+   if(await page.locator('#roundResultDialog').evaluate(e=>e.open))await page.locator('#roundResultContinue').click();
    return body;
   };
   await page.locator('#accountBtn').click();await page.locator('#authSwitch').click();
   await page.locator('[name=username]').fill(username);await page.locator('[name=password]').fill('Browser-password-2026');
   await clickRequest('#authSubmit','register');await page.waitForFunction(()=>!document.querySelector('#authDialog').open);
   assert.match(await page.locator('#accountBtn').innerText(),new RegExp(username));
+  await page.locator(mobile?'#leaderboardFooter':'#leaderboardNav').click();await page.waitForSelector('.leaderboard-table');assert.equal(await page.locator('.your-rank').count(),1);assert.match(await page.locator('.your-rank').innerText(),new RegExp(username));await page.locator('#leaderboardDialog .close').click();
   await page.locator('#search').fill('рулетка');assert.equal(await page.locator('[data-game]').count(),1);
   await page.locator('#search').fill('несуществующая');assert.equal(await page.locator('[data-game]').count(),0);
   await page.locator('#search').fill('');await page.locator('[data-category=cards]').click();assert.equal(await page.locator('[data-game]').count(),4);
@@ -123,7 +130,7 @@ try{
   await open('russian');await clickRequest('#startBtn','game/start');await page.locator('[data-card="0"]').click();await clickRequest('[data-action=exchange]','game/action');await finish();
   await open('threecard');await page.locator('#pairPlus').fill('10');await clickRequest('#startBtn','game/start');await finish();
   await open('holdem');await clickRequest('#startBtn','game/start');await clickRequest('[data-action=check]','game/action');await clickRequest('[data-action=bet]','game/action');
-  await open('baccarat');assert.equal(await page.locator('.box-bet').count(),15);
+  await open('baccarat');assert.equal(await page.locator('.box-bet').count(),25);
   await page.locator('#clearBoxes').click();await page.locator('[data-box="0"][data-box-side="player"]').click();await page.locator('[data-box="2"][data-box-side="banker"]').click();await page.locator('[data-box="4"][data-box-side="tie"]').click();
   const baccarat=await clickRequest('#startBtn','game/start');assert.equal(baccarat.game.boxes.length,3);assert.equal(baccarat.game.totalCost,300);assert.equal(baccarat.game.totalPayout,baccarat.game.boxes.reduce((sum,b)=>sum+b.payout,0));
   await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-baccarat-boxes.png`,fullPage:true});
@@ -142,7 +149,7 @@ try{
   const safe=Array.from({length:25},(_,i)=>i).find(i=>!app.store.data.users[username].game.mineCells.includes(i));
   const mine=await clickRequest(`[data-cell="${safe}"]`,'game/action');assert.equal(mine.game.revealed.length,1);assert.equal(mine.game.mineCells,undefined);
   await clickRequest('[data-action=cashout]','game/action');
-  await open('slots');await page.locator('#slotPayouts').click();await page.waitForSelector('.payout-table tbody tr');assert.equal(await page.locator('.payout-table tbody tr').count(),7);assert.match(await page.locator('#slotPayoutContent').innerText(),/150×/);assert.doesNotMatch(await page.locator('#slotPayoutContent').innerText(),/undefined/);assert.match(await page.locator('#slotPayoutContent').innerText(),/2× \/ 3× \/ 5×/);
+  await open('slots');await page.waitForSelector('.slot-guide table');assert.equal(await page.locator('.slot-guide tbody tr').count(),7);assert.match(await page.locator('.slot-guide').innerText(),/8 FREE SPINS/);await page.locator('#slotPayouts').click();await page.waitForSelector('.payout-table tbody tr');assert.equal(await page.locator('.payout-table tbody tr').count(),7);assert.match(await page.locator('#slotPayoutContent').innerText(),/150×/);assert.doesNotMatch(await page.locator('#slotPayoutContent').innerText(),/undefined/);assert.match(await page.locator('#slotPayoutContent').innerText(),/2× \/ 3× \/ 5×/);
   await page.locator('#slotPayoutDialog .close').click();assert.equal(await page.locator('#slotPayoutDialog').evaluate(e=>e.open),false);
   await page.emulateMedia({reducedMotion:'no-preference'});
   const slotRequest=clickRequest('#startBtn','game/start');await page.waitForSelector('.slot-machine.spinning');
@@ -161,9 +168,9 @@ try{
   if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),10);
   assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Horizontal overflow');
   await context.close();
-  report.push({viewport,status:'passed',checks:['scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','multi-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
+  report.push({viewport,status:'passed',checks:['all ten result windows: stake, payout and net','public leaderboard with current player','compact slot coefficients and free spin rules','scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','multi-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
  }
- assert.deepEqual(errors,[]);
+ assert.deepEqual(errors,[]);assert.equal(resultTypes.size,10,'All ten games show correct result windows');
  await writeFile('test-results/browser.json',JSON.stringify({report,errors},null,2));
  console.log(JSON.stringify({report,errors},null,2));
 }finally{await browser.close();await new Promise(r=>app.server.close(r));await app.store.close();await rm(dataDir,{recursive:true,force:true});}

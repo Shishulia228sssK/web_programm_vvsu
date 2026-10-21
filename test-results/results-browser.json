@@ -1,0 +1,45 @@
+{
+  "report": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "status": "passed",
+      "checks": [
+        "bonus progress persists",
+        "award modal",
+        "free-spin payouts credited without new stake",
+        "final bonus total",
+        "win/loss/push and partial-return windows",
+        "reopen result",
+        "leaderboard privacy and current player",
+        "pair betting and 11:1 payout",
+        "personal baccarat history",
+        "bead/big road layout and local scrolling",
+        "light theme result"
+      ]
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": "passed",
+      "checks": [
+        "bonus progress persists",
+        "award modal",
+        "free-spin payouts credited without new stake",
+        "final bonus total",
+        "win/loss/push and partial-return windows",
+        "reopen result",
+        "leaderboard privacy and current player",
+        "pair betting and 11:1 payout",
+        "personal baccarat history",
+        "bead/big road layout and local scrolling",
+        "light theme result"
+      ]
+    }
+  ],
+  "errors": []
+}

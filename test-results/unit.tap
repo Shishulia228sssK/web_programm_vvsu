@@ -2,374 +2,434 @@ TAP version 13
 # Subtest: shuffled deck has all unique cards
 ok 1 - shuffled deck has all unique cards
   ---
-  duration_ms: 2.251535
+  duration_ms: 2.183572
   type: 'test'
   ...
 # Subtest: ace totals and wheel straight
 ok 2 - ace totals and wheel straight
   ---
-  duration_ms: 1.433761
+  duration_ms: 1.131154
   type: 'test'
   ...
 # Subtest: blackjack double charges additional stake and pays both stakes
 ok 3 - blackjack double charges additional stake and pays both stakes
   ---
-  duration_ms: 1.033329
+  duration_ms: 0.935524
   type: 'test'
   ...
 # Subtest: blackjack surrender returns half
 ok 4 - blackjack surrender returns half
   ---
-  duration_ms: 0.258678
+  duration_ms: 0.319414
   type: 'test'
   ...
 # Subtest: blackjack split aces closes both hands
 ok 5 - blackjack split aces closes both hands
   ---
-  duration_ms: 0.270441
+  duration_ms: 0.400073
   type: 'test'
   ...
 # Subtest: ace and king cannot split
 ok 6 - ace and king cannot split
   ---
-  duration_ms: 0.545999
+  duration_ms: 0.447194
   type: 'test'
   ...
 # Subtest: dealer natural insurance returns three insurance stakes
 ok 7 - dealer natural insurance returns three insurance stakes
   ---
-  duration_ms: 0.521241
+  duration_ms: 0.53089
   type: 'test'
   ...
 # Subtest: public view hides dealer and deck without mutating engine
 ok 8 - public view hides dealer and deck without mutating engine
   ---
-  duration_ms: 0.580329
+  duration_ms: 0.321499
   type: 'test'
   ...
 # Subtest: russian exchange validates indices and can be used once
 ok 9 - russian exchange validates indices and can be used once
   ---
-  duration_ms: 0.976838
+  duration_ms: 1.252471
   type: 'test'
   ...
 # Subtest: holdem check progresses board and requires decision at river
 ok 10 - holdem check progresses board and requires decision at river
   ---
-  duration_ms: 1.182829
+  duration_ms: 1.18934
   type: 'test'
   ...
 # Subtest: all card games can finish and serialize
 ok 11 - all card games can finish and serialize
   ---
-  duration_ms: 50.128761
+  duration_ms: 47.458062
   type: 'test'
   ...
 # Subtest: baccarat banker third card table exhaustively
 ok 12 - baccarat banker third card table exhaustively
   ---
-  duration_ms: 0.267918
+  duration_ms: 0.352718
   type: 'test'
   ...
 # Subtest: Pair Plus independent winning bet survives fold
 ok 13 - Pair Plus independent winning bet survives fold
   ---
-  duration_ms: 0.173517
+  duration_ms: 0.249616
   type: 'test'
   ...
 # Subtest: Pair Plus loses independently on high card fold
 ok 14 - Pair Plus loses independently on high card fold
   ---
-  duration_ms: 0.200521
+  duration_ms: 0.307505
   type: 'test'
   ...
 # Subtest: blackjack dealer stands soft seventeen
 ok 15 - blackjack dealer stands soft seventeen
   ---
-  duration_ms: 0.15921
+  duration_ms: 0.183477
   type: 'test'
   ...
 # Subtest: blackjack dealer draws below seventeen and busts
 ok 16 - blackjack dealer draws below seventeen and busts
   ---
-  duration_ms: 0.156285
+  duration_ms: 0.123866
   type: 'test'
   ...
 # Subtest: blackjack split keeps each hand separate and disallows resplit/surrender
 ok 17 - blackjack split keeps each hand separate and disallows resplit/surrender
   ---
-  duration_ms: 0.289144
+  duration_ms: 0.452602
   type: 'test'
   ...
 # Subtest: blackjack naturals settle after insurance decision with 3:2 payout
 ok 18 - blackjack naturals settle after insurance decision with 3:2 payout
   ---
-  duration_ms: 0.134568
+  duration_ms: 0.259383
   type: 'test'
   ...
 # Subtest: insurance losing stake and late double restrictions
 ok 19 - insurance losing stake and late double restrictions
   ---
-  duration_ms: 0.154644
+  duration_ms: 0.29457
   type: 'test'
   ...
 # Subtest: five-card poker recognizes every category and orders kickers
 ok 20 - five-card poker recognizes every category and orders kickers
   ---
-  duration_ms: 0.366018
+  duration_ms: 0.53396
   type: 'test'
   ...
 # Subtest: best five of seven chooses higher full house and uses board straight flush
 ok 21 - best five of seven chooses higher full house and uses board straight flush
   ---
-  duration_ms: 0.193455
+  duration_ms: 0.384913
   type: 'test'
   ...
 # Subtest: russian ace-king qualifies; ace-queen does not
 ok 22 - russian ace-king qualifies; ace-queen does not
   ---
-  duration_ms: 0.343371
+  duration_ms: 0.432209
   type: 'test'
   ...
 # Subtest: russian tie pushes ante and play; qualified loss pays nothing
 ok 23 - russian tie pushes ante and play; qualified loss pays nothing
   ---
-  duration_ms: 0.172738
+  duration_ms: 0.272038
   type: 'test'
   ...
 # Subtest: russian qualifying wins pay documented table for every category
 ok 24 - russian qualifying wins pay documented table for every category
   ---
-  duration_ms: 0.487968
+  duration_ms: 0.446043
   type: 'test'
   ...
 # Subtest: russian sixth card improves best-five hand and charges one ante
 ok 25 - russian sixth card improves best-five hand and charges one ante
   ---
-  duration_ms: 0.24339
+  duration_ms: 0.417513
   type: 'test'
   ...
 # Subtest: russian insurance pays only dealer nonqualification, independent of main hand
 ok 26 - russian insurance pays only dealer nonqualification, independent of main hand
   ---
-  duration_ms: 0.325628
+  duration_ms: 0.73725
   type: 'test'
   ...
 # Subtest: three-card dealer queen qualifies; jack does not
 ok 27 - three-card dealer queen qualifies; jack does not
   ---
-  duration_ms: 0.112015
+  duration_ms: 0.231204
   type: 'test'
   ...
 # Subtest: three-card ties return both stakes; dealer pair qualifies regardless of high rank
 ok 28 - three-card ties return both stakes; dealer pair qualifies regardless of high rank
   ---
-  duration_ms: 0.083701
+  duration_ms: 0.174756
   type: 'test'
   ...
 # Subtest: three-card ante bonus pays despite stronger dealer and is not paid on fold
 ok 29 - three-card ante bonus pays despite stronger dealer and is not paid on fold
   ---
-  duration_ms: 0.167629
+  duration_ms: 0.293369
   type: 'test'
   ...
 # Subtest: Pair Plus table pays independently of dealer and main-game loss on play or fold
 ok 30 - Pair Plus table pays independently of dealer and main-game loss on play or fold
   ---
-  duration_ms: 0.260882
+  duration_ms: 1.005584
   type: 'test'
   ...
 # Subtest: blackjack multiple boxes share dealer, skip naturals, and pay each hand once
 ok 31 - blackjack multiple boxes share dealer, skip naturals, and pay each hand once
   ---
-  duration_ms: 0.22673
+  duration_ms: 0.397269
   type: 'test'
   ...
 # Subtest: blackjack multi-box insurance covers total and dealer natural settles all boxes
 ok 32 - blackjack multi-box insurance covers total and dealer natural settles all boxes
   ---
-  duration_ms: 0.133316
+  duration_ms: 0.426238
   type: 'test'
   ...
 # Subtest: blackjack permits a single split in each box and doubles only the active hand
 ok 33 - blackjack permits a single split in each box and doubles only the active hand
   ---
-  duration_ms: 0.26114
+  duration_ms: 0.633487
   type: 'test'
   ...
 # Subtest: blackjack surrender remains available on an unsplit independent box
 ok 34 - blackjack surrender remains available on an unsplit independent box
   ---
-  duration_ms: 0.185199
+  duration_ms: 0.302847
   type: 'test'
   ...
 # Subtest: multi-box input rejects duplicates, invalid seats, totals and fractional commissions
 ok 35 - multi-box input rejects duplicates, invalid seats, totals and fractional commissions
   ---
-  duration_ms: 1.074927
+  duration_ms: 1.811008
   type: 'test'
   ...
 # Subtest: baccarat all boxes use the same outcome and sum per-side payouts exactly
 ok 36 - baccarat all boxes use the same outcome and sum per-side payouts exactly
   ---
-  duration_ms: 7.762262
+  duration_ms: 11.657808
   type: 'test'
   ...
 # Subtest: blackjack can split two separate boxes against the same dealer
 ok 37 - blackjack can split two separate boxes against the same dealer
   ---
-  duration_ms: 0.437267
+  duration_ms: 0.526521
+  type: 'test'
+  ...
+# Subtest: baccarat pairs pay 11:1 net independently of the main outcome
+ok 38 - baccarat pairs pay 11:1 net independently of the main outcome
+  ---
+  duration_ms: 0.541906
+  type: 'test'
+  ...
+# Subtest: baccarat pairs compare original ranks, not zero-point values or a third card
+ok 39 - baccarat pairs compare original ranks, not zero-point values or a third card
+  ---
+  duration_ms: 0.289168
   type: 'test'
   ...
 # Subtest: wheel contains each European outcome exactly once
-ok 38 - wheel contains each European outcome exactly once
+ok 40 - wheel contains each European outcome exactly once
   ---
-  duration_ms: 1.587859
+  duration_ms: 2.649192
   type: 'test'
   ...
 # Subtest: every straight outcome pays gross 36x and loses elsewhere
-ok 39 - every straight outcome pays gross 36x and loses elsewhere
+ok 41 - every straight outcome pays gross 36x and loses elsewhere
   ---
-  duration_ms: 4.620635
+  duration_ms: 5.060125
   type: 'test'
   ...
 # Subtest: legal inside and outside wagers pay correct gross totals for all outcomes
-ok 40 - legal inside and outside wagers pay correct gross totals for all outcomes
+ok 42 - legal inside and outside wagers pay correct gross totals for all outcomes
   ---
-  duration_ms: 4.588686
+  duration_ms: 6.61725
   type: 'test'
   ...
 # Subtest: invalid roulette layouts and stakes rejected
-ok 41 - invalid roulette layouts and stakes rejected
+ok 43 - invalid roulette layouts and stakes rejected
   ---
-  duration_ms: 0.782364
+  duration_ms: 0.842898
   type: 'test'
   ...
 # Subtest: named wheel series validate and neighbors wrap
-ok 42 - named wheel series validate and neighbors wrap
+ok 44 - named wheel series validate and neighbors wrap
   ---
-  duration_ms: 3.884001
+  duration_ms: 4.410436
   type: 'test'
   ...
 # Subtest: mines redacts hidden cells and cashout settles once
-ok 43 - mines redacts hidden cells and cashout settles once
+ok 45 - mines redacts hidden cells and cashout settles once
   ---
-  duration_ms: 1.051872
+  duration_ms: 1.406755
   type: 'test'
   ...
 # Subtest: crash auto collect wins before crash; late manual loses
-ok 44 - crash auto collect wins before crash; late manual loses
+ok 46 - crash auto collect wins before crash; late manual loses
   ---
-  duration_ms: 0.223876
+  duration_ms: 0.274275
   type: 'test'
   ...
 # Subtest: slots expose 20 lines and preserve stake for free spins
-ok 45 - slots expose 20 lines and preserve stake for free spins
+ok 47 - slots expose 20 lines and preserve stake for free spins
   ---
-  duration_ms: 0.718943
+  duration_ms: 0.7705
   type: 'test'
   ...
 # Subtest: mines automatically settles final safe cell
-ok 46 - mines automatically settles final safe cell
+ok 48 - mines automatically settles final safe cell
   ---
-  duration_ms: 0.249026
+  duration_ms: 0.427653
   type: 'test'
   ...
 # Subtest: crash ties lose; unknown actions cannot trigger settlement
-ok 47 - crash ties lose; unknown actions cannot trigger settlement
+ok 49 - crash ties lose; unknown actions cannot trigger settlement
   ---
-  duration_ms: 0.286571
+  duration_ms: 0.335721
   type: 'test'
   ...
 # Subtest: slot bonus only pays once and retains originating stake
-ok 48 - slot bonus only pays once and retains originating stake
+ok 50 - slot bonus only pays once and retains originating stake
   ---
-  duration_ms: 0.31781
+  duration_ms: 0.437015
   type: 'test'
   ...
 # Subtest: slot paylines score actual multiplier and leading wild run
-ok 49 - slot paylines score actual multiplier and leading wild run
+ok 51 - slot paylines score actual multiplier and leading wild run
   ---
-  duration_ms: 0.458089
+  duration_ms: 0.636675
   type: 'test'
   ...
 # Subtest: exhaustive table wagers independently cover every legal layout and all 37 outcomes
-ok 50 - exhaustive table wagers independently cover every legal layout and all 37 outcomes
+ok 52 - exhaustive table wagers independently cover every legal layout and all 37 outcomes
   ---
-  duration_ms: 14.770802
+  duration_ms: 14.884982
   type: 'test'
   ...
 # Subtest: all wheel-series component wagers, chip totals, and payouts independently match
-ok 51 - all wheel-series component wagers, chip totals, and payouts independently match
+ok 53 - all wheel-series component wagers, chip totals, and payouts independently match
   ---
-  duration_ms: 5.058372
+  duration_ms: 5.49398
   type: 'test'
   ...
 # Subtest: roulette enforces integer limits on aggregated positions including reversed splits
-ok 52 - roulette enforces integer limits on aggregated positions including reversed splits
+ok 54 - roulette enforces integer limits on aggregated positions including reversed splits
   ---
-  duration_ms: 0.746417
+  duration_ms: 0.866278
+  type: 'test'
+  ...
+# Subtest: scatter combinations award free spins and payouts scale with original stake
+ok 55 - scatter combinations award free spins and payouts scale with original stake
+  ---
+  duration_ms: 0.461138
+  type: 'test'
+  ...
+# Subtest: slot bonus accounting survives serialization and never charges free spins
+ok 56 - slot bonus accounting survives serialization and never charges free spins
+  ---
+  duration_ms: 0.467914
+  type: 'test'
+  ...
+# Subtest: bead road fills six rows then the next column and counts pairs
+ok 57 - bead road fills six rows then the next column and counts pairs
+  ---
+  duration_ms: 1.56943
+  type: 'test'
+  ...
+# Subtest: big road extends streaks, wraps right at row six and starts changes from the next base column
+ok 58 - big road extends streaks, wraps right at row six and starts changes from the next base column
+  ---
+  duration_ms: 0.375376
+  type: 'test'
+  ...
+# Subtest: ties annotate the current big-road mark and preserve pair indicators including leading ties
+ok 59 - ties annotate the current big-road mark and preserve pair indicators including leading ties
+  ---
+  duration_ms: 0.183426
+  type: 'test'
+  ...
+# Subtest: big road avoids occupied cells when a long previous streak blocks descent
+ok 60 - big road avoids occupied cells when a long previous streak blocks descent
+  ---
+  duration_ms: 1.344602
   type: 'test'
   ...
 # Subtest: storage excludes a second live writer and permits opening after close
-ok 53 - storage excludes a second live writer and permits opening after close
+ok 61 - storage excludes a second live writer and permits opening after close
   ---
-  duration_ms: 32.589957
+  duration_ms: 26.018754
   type: 'test'
   ...
 # Subtest: post-rename backup failure blocks later writes and preserves committed primary for restart
-ok 54 - post-rename backup failure blocks later writes and preserves committed primary for restart
+ok 62 - post-rename backup failure blocks later writes and preserves committed primary for restart
   ---
-  duration_ms: 12.467575
+  duration_ms: 8.357995
   type: 'test'
   ...
 # Subtest: simultaneous stale lock recovery grants only one writer
-ok 55 - simultaneous stale lock recovery grants only one writer
+ok 63 - simultaneous stale lock recovery grants only one writer
   ---
-  duration_ms: 9.123233
+  duration_ms: 4.551647
   type: 'test'
   ...
 # Subtest: account sessions, password hashing, idempotency, concurrency, persistence, hidden state
-ok 56 - account sessions, password hashing, idempotency, concurrency, persistence, hidden state
+ok 64 - account sessions, password hashing, idempotency, concurrency, persistence, hidden state
   ---
-  duration_ms: 173.956375
+  duration_ms: 178.541915
   type: 'test'
   ...
 # Неверные параметры
 # Subtest: reject malicious stakes, client payout, origins and topups
-ok 57 - reject malicious stakes, client payout, origins and topups
+ok 65 - reject malicious stakes, client payout, origins and topups
   ---
-  duration_ms: 63.529369
+  duration_ms: 70.891667
   type: 'test'
   ...
 # Subtest: atomic file backup recovery
-ok 58 - atomic file backup recovery
+ok 66 - atomic file backup recovery
   ---
-  duration_ms: 50.627953
+  duration_ms: 47.740911
   type: 'test'
   ...
 # Поле: от 1 до 500 на одну позицию
 # Поле: от 1 до 500 на одну позицию
 # Шансы, дюжины и колонки: от 25 до 2000 на одну позицию
 # Subtest: roulette API allows one coin and rejects per-position limit bypass without changing balance
-ok 59 - roulette API allows one coin and rejects per-position limit bypass without changing balance
+ok 67 - roulette API allows one coin and rejects per-position limit bypass without changing balance
   ---
-  duration_ms: 54.890259
+  duration_ms: 69.077216
   type: 'test'
   ...
 # Сумма боксов не совпадает со ставкой или превышает 100000
 # Subtest: multi-box API charges actual total once and exposes payouts without deck
-ok 60 - multi-box API charges actual total once and exposes payouts without deck
+ok 68 - multi-box API charges actual total once and exposes payouts without deck
   ---
-  duration_ms: 73.20089
+  duration_ms: 61.116617
   type: 'test'
   ...
-1..60
-# tests 60
+# Subtest: public leaderboard sorts balances and exposes only rank, username and balance
+ok 69 - public leaderboard sorts balances and exposes only rank, username and balance
+  ---
+  duration_ms: 114.016721
+  type: 'test'
+  ...
+# Subtest: baccarat pair results persist in an authenticated personal history exactly once
+ok 70 - baccarat pair results persist in an authenticated personal history exactly once
+  ---
+  duration_ms: 101.160134
+  type: 'test'
+  ...
+1..70
+# tests 70
 # suites 0
-# pass 60
+# pass 70
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 623.31785
+# duration_ms 869.682657
