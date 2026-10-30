@@ -37,6 +37,25 @@ try{
   await page.locator('#sceneNext').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'blackjack');
   await page.locator('#scenePrev').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'roulette');
   await page.locator('.scene-card-front').click();assert.ok(await page.locator('.roulette-board').isVisible());await page.locator('#backBtn').click();
+  const motionAsset=await context.request.get(url+'/gsap.min.js');assert.equal(motionAsset.status(),200,'GSAP is hosted locally');
+  assert.ok(await page.evaluate(()=>!!window.gsap),'GSAP initialized before the app');
+  assert.equal(await page.locator('.casino-bubble').count(),0,'Reduced motion creates no bubbles');
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.waitForSelector('.casino-bubble');
+  await page.locator('[data-flavor=blue]').click();
+  assert.equal(await page.locator('body').getAttribute('data-casino-flavor'),'blue');
+  assert.equal(await page.locator('[data-flavor=blue]').getAttribute('aria-pressed'),'true');
+  const sceneBox=await page.locator('#sceneViewport').boundingBox();
+  await page.mouse.move(sceneBox.x+sceneBox.width*.8,sceneBox.y+sceneBox.height*.3);
+  await page.waitForFunction(()=>document.querySelector('.immersive-object').style.transform.includes('rotateY('));
+  await page.locator('#motionToggle').click();
+  assert.equal(await page.locator('.casino-bubble').count(),0,'Pause removes bubbles');
+  assert.equal(await page.locator('#motionToggle').getAttribute('aria-pressed'),'true');
+  await page.locator('#motionToggle').click();
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.locator('[data-flavor=classic]').click();
+  assert.equal(await page.locator('.casino-bubble').count(),0);
+  assert.equal(await page.locator('.immersive-object').evaluate(e=>getComputedStyle(e).animationName),'none');
   for(const theme of ['light','dark']){
    await page.evaluate(theme=>{document.documentElement.dataset.theme=theme;localStorage.setItem('arcadeTheme',theme)},theme);
    for(const width of [320,390,768,1440]){
