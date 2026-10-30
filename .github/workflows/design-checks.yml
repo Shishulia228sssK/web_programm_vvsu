@@ -2,8 +2,6 @@ name: Design checks
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [codex/game-posters-redesign]
 permissions:
   contents: read
 jobs:

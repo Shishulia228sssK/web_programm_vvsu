@@ -94,7 +94,7 @@ for(const id of ['leaderboardNav','leaderboardFooter','profileLeaderboardBtn','r
 $('#refreshBaccaratStats').onclick=showBaccaratStats;
 $('#roundResultContinue').onclick=()=>$('#roundResultDialog').close();
 $('#roundResultDialog').addEventListener('close',()=>{if(view==='game')($('#startBtn:not(:disabled)')||$('#gameActions button'))?.focus()});
-function setTheme(theme){document.querySelector('meta[name="theme-color"]').content=theme==='light'?'#eeeef4':'#202231';document.documentElement.dataset.theme=theme;$('#themeBtn').setAttribute('aria-label',theme==='light'?'Включить тёмную тему':'Включить светлую тему');$('#themeBtn').setAttribute('aria-pressed',String(theme==='light'));document.querySelector('meta[name="theme-color"]').content=theme==='light'?'#efeee8':'#101014'}
+function setTheme(theme){document.documentElement.dataset.theme=theme;$('#themeBtn').setAttribute('aria-label',theme==='light'?'Включить тёмную тему':'Включить светлую тему');$('#themeBtn').setAttribute('aria-pressed',String(theme==='light'));document.querySelector('meta[name="theme-color"]').content=theme==='light'?'#eeeef4':'#202231'}
 setTheme(localStorage.getItem('arcadeTheme')==='light'?'light':'dark');
 $('#themeBtn').onclick=()=>{const theme=document.documentElement.dataset.theme==='light'?'dark':'light';setTheme(theme);localStorage.setItem('arcadeTheme',theme)};
 render();api('me').then(data=>{apply(data);if(snapshot.game&&!snapshot.game.done){selectedGame=snapshot.game.type;view='game'}render()}).catch(e=>{if(!/авториз|войд|auth|session|401/i.test(e.message))console.info('Гостевой режим:',e.message)});
