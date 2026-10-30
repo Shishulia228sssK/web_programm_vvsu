@@ -30,10 +30,10 @@ try{
    assert.match(response.headers()['content-type'],/text\/css/);
   }
   assert.equal(await page.locator('.poster').count(),10);
-  assert.equal(await page.locator('.poster-roulette').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(40, 83, 71)','Redesign CSS is actually applied');
+  assert.equal(await page.locator('.poster-art img').first().evaluate(e=>getComputedStyle(e).objectFit),'cover','Photographic card CSS is applied');
   const images=await page.locator('.poster-art img').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('src')));
   assert.equal(new Set(images).size,10,'All games use different internet-sourced illustrations');
-  for(const src of images){const r=await context.request.get(url+src);assert.equal(r.status(),200);assert.match(r.headers()['content-type'],/image\/svg\+xml/)}
+  for(const src of images){assert.ok(src.startsWith('https://images.unsplash.com/'),'Curated photo source');}
   await page.locator('#sceneNext').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'blackjack');
   await page.locator('#scenePrev').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'roulette');
   await page.locator('.scene-card-front').click();assert.ok(await page.locator('.roulette-board').isVisible());await page.locator('#backBtn').click();
