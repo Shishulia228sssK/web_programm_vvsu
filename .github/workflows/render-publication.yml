@@ -1,0 +1,77 @@
+name: Verify Render publication
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/render-publication.yml'
+      - 'public/**'
+      - 'server.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  published-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Verify release and photograph the published site
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {mkdir,writeFile} from 'node:fs/promises';
+          import {chromium} from 'playwright';
+          const origin='https://web-programm-vvsu.onrender.com';
+          let ready=false;
+          for(let i=0;i<24;i++){
+            try{
+              const response=await fetch(origin+'/?verify='+Date.now(),{signal:AbortSignal.timeout(15000)});
+              const html=await response.text();
+              if(response.ok&&html.includes('aurora-photos-v1')){ready=true;break}
+              console.log('Waiting for Render: attempt '+(i+1)+', status '+response.status);
+            }catch(e){console.log('Waiting for Render: '+e.message)}
+            await new Promise(r=>setTimeout(r,10000));
+          }
+          assert.ok(ready,'Render must serve the photographic release');
+          const css=await (await fetch(origin+'/scene.css?v='+Date.now())).text();
+          const app=await (await fetch(origin+'/app.js?v='+Date.now())).text();
+          assert.ok(css.includes('@keyframes casino-aurora'));
+          assert.ok(app.includes('const gamePhotos='));
+          const browser=await chromium.launch({args:['--no-sandbox']});
+          await mkdir('test-results/render',{recursive:true});
+          try{
+            const page=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+            const errors=[];page.on('pageerror',e=>errors.push(e.message));
+            await page.goto(origin,{waitUntil:'domcontentloaded'});
+            await page.waitForSelector('.poster');
+            for(const card of await page.locator('.poster').all()){await card.scrollIntoViewIfNeeded();await page.waitForTimeout(300)}
+            await page.waitForTimeout(3000);
+            const photos=await page.locator('.poster-art img').evaluateAll(nodes=>nodes.map(e=>({src:e.src,loaded:e.complete&&e.naturalWidth>0,fallback:!!e.dataset.fallback})));
+            console.log('LIVE_PHOTOS:'+JSON.stringify(photos));
+            await writeFile('test-results/render/photos.json',JSON.stringify(photos,null,2));
+            await page.evaluate(()=>scrollTo(0,0));
+            await page.screenshot({path:'test-results/render/desktop.png',fullPage:true});
+            await page.locator('#catalog').scrollIntoViewIfNeeded();
+            const picture=await page.screenshot({type:'jpeg',quality:45});
+            const encoded=picture.toString('base64');
+            for(let i=0;i<encoded.length;i+=8000)console.log('RENDER_PREVIEW_PART:'+encoded.slice(i,i+8000));
+            await page.setViewportSize({width:390,height:844});
+            await page.evaluate(()=>scrollTo(0,0));
+            await page.screenshot({path:'test-results/render/mobile.png',fullPage:true});
+            assert.equal(errors.length,0,errors.join('; '));
+            assert.ok(photos.every(p=>p.loaded&&!p.fallback),'All published game photographs load');
+            console.log('RENDER_PUBLICATION_VERIFIED');
+          }finally{await browser.close()}
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: render-site-screenshots
+          path: test-results/render/
+          retention-days: 7
