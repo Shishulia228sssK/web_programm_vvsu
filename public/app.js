@@ -26,16 +26,76 @@ const featuredGames=['roulette','blackjack','slots','crash'];
 let featuredIndex=0;
 function featureCard(type,position){const g=games.find(g=>g[0]===type);return `<button class="scene-card scene-card-${position} feature-${type}" data-featured="${type}" aria-label="Играть: ${g[1]}"><span class="scene-card-top"><span>ЛК / ${String(games.indexOf(g)+1).padStart(2,'0')}</span><span>↗</span></span><span class="scene-card-art">${art(type)}</span><span class="scene-card-title">${g[1]}</span><span class="scene-card-bottom"><span>${g[4]}</span><span>ОТКРЫТЬ ИГРУ ↗</span></span></button>`}
 function sceneCards(){return featureCard(featuredGames[(featuredIndex+3)%4],'back')+featureCard(featuredGames[(featuredIndex+1)%4],'side')+featureCard(featuredGames[featuredIndex],'front')}
-function heroScene(){return `<section class="hero scene-hero" aria-label="Откройте свою игру"><div class="scene-meta"><span><i></i> ИНТЕРАКТИВНЫЙ ИГРОВОЙ КЛУБ</span><span>EST. 2026 / ТОЛЬКО ВИРТУАЛЬНЫЕ МОНЕТЫ</span></div><div class="scene-layout"><div class="hero-copy"><span class="eyebrow">НЕ ПРОСТО ИГРА. ТВОЙ ХОД.</span><h1>Войди<br>в <em>игру.</em><span class="title-star" aria-hidden="true">✳</span></h1><p>Классические правила.<br>Новая перспектива. Выбери свою.</p><button class="button" id="heroPlay">Исследовать игры <span>↗</span></button><div class="hero-note"><span>10</span><p>игр в одной вселенной<br>50 000 монет на старте</p></div></div><div class="scene-viewport" id="sceneViewport"><span class="scene-ghost" aria-hidden="true">PLAY</span><div class="scene-orbit" aria-hidden="true"></div><span class="scene-cross cross-a" aria-hidden="true">+</span><span class="scene-cross cross-b" aria-hidden="true">+</span><div class="scene-stack" id="sceneStack">${sceneCards()}</div><span class="scene-coordinate" aria-hidden="true">X: 037 / Y: 021<br>YOUR NEXT MOVE</span></div></div><div class="scene-footer"><span class="scene-status"><i></i> БЕЗ ПЛАТЕЖЕЙ. БЕЗ ВЫВОДА СРЕДСТВ.</span><div class="scene-controls"><span id="sceneCounter" aria-live="polite">${String(featuredIndex+1).padStart(2,'0')} / 04</span><button id="scenePrev" aria-label="Предыдущая игра">←</button><button id="sceneNext" aria-label="Следующая игра">→</button></div><a href="#catalog" class="scene-scroll">КАТАЛОГ ИГР ↓</a></div></section>`}
-function bindScene(){
- const viewport=$('#sceneViewport'),stack=$('#sceneStack');
- const bindCards=()=>stack.querySelectorAll('[data-featured]').forEach(b=>b.onclick=()=>openGame(b.dataset.featured));
- const change=delta=>{featuredIndex=(featuredIndex+delta+4)%4;stack.innerHTML=sceneCards();$('#sceneCounter').textContent=String(featuredIndex+1).padStart(2,'0')+' / 04';bindCards()};
- $('#scenePrev').onclick=()=>change(-1);$('#sceneNext').onclick=()=>change(1);bindCards();
- viewport.onpointermove=e=>{if(e.pointerType==='touch'||!matchMedia('(prefers-reduced-motion: no-preference)').matches)return;const r=viewport.getBoundingClientRect();stack.style.setProperty('--tilt-x',((e.clientY-r.top)/r.height-.5)*-9+'deg');stack.style.setProperty('--tilt-y',((e.clientX-r.left)/r.width-.5)*12+'deg')};
- viewport.onpointerleave=()=>{stack.style.setProperty('--tilt-x','0deg');stack.style.setProperty('--tilt-y','0deg')};
+let casinoFlavor='classic',casinoMotionPaused=false,disposeCasinoScene=()=>{};
+function immersiveArt(type){
+ if(type==='roulette')return `<span class="showcase-wheel">${wheelSvg(0)}<span class="showcase-hub">ЛК</span></span>`;
+ return `<img src="/images/${type}.svg" alt="" width="600" height="600" decoding="async">`;
 }
-function render(){clearTimeout(tickTimer);document.body.dataset.view=view;$('#lobbyNav').classList.toggle('active',view!=='history');$('#historyNav').classList.toggle('active',view==='history');if(view==='lobby')renderLobby();else if(view==='history')renderHistory();else renderGame()}
+function heroScene(){
+ return `<section class="hero scene-hero immersive-hero" aria-labelledby="immersiveTitle"><div class="casino-atmosphere" aria-hidden="true"><div class="casino-bubbles"></div>${[[220,25,30],[100,60,42],[250,30,62],[140,15,48],[120,75,20],[180,45,75],[80,15,40],[70,50,55],[75,80,35]].map(([size,x,y],i)=>`<span class="casino-floater floater-${i}" style="--size:${size}px;left:${x}%;top:${y}%;--float-duration:${[5,7,6,8,5.5,6.5,9,11,10][i]}s"><span class="casino-token">${i%3===0?'♠':i%3===1?'♦':'♣'}</span></span>`).join('')}</div><div class="immersive-top"><p>ЛУДКА.COM / Виртуальный клуб</p><div class="flavor-switch" role="group" aria-label="Цвет атмосферы"><button data-flavor="classic" aria-pressed="${casinoFlavor==='classic'}">Изумруд</button><button data-flavor="blue" aria-pressed="${casinoFlavor==='blue'}">Сапфир</button><button id="motionToggle" aria-pressed="${casinoMotionPaused}">${casinoMotionPaused?'Включить движение':'Остановить движение'}</button></div></div><div class="immersive-layout"><div class="immersive-copy"><p class="immersive-kicker">Классические игры. Новая атмосфера.</p><h1 id="immersiveTitle">Твой<br>ход.</h1><p class="immersive-description">Занимай место за столом.<br>Здесь играют на виртуальные монеты.</p><button class="button" id="heroPlay">Выбрать игру <span aria-hidden="true">+</span></button></div><div class="scene-viewport immersive-viewport" id="sceneViewport"><div class="immersive-halo" aria-hidden="true"></div><div class="scene-stack immersive-stack" id="sceneStack"><button class="scene-card-front immersive-object" data-featured="${featuredGames[featuredIndex]}" aria-label="Играть: ${games.find(g=>g[0]===featuredGames[featuredIndex])[1]}"><span class="immersive-object-art">${immersiveArt(featuredGames[featuredIndex])}</span><span class="immersive-object-name">${games.find(g=>g[0]===featuredGames[featuredIndex])[1]}</span></button></div></div></div><div class="immersive-bottom"><p>50 000 монет на старте.<br><span>Без платежей и вывода средств.</span></p><div class="immersive-games" role="group" aria-label="Избранные игры">${featuredGames.map((g,i)=>`<button class="immersive-game ${featuredIndex===i?'active':''}" data-hero-index="${i}" aria-pressed="${featuredIndex===i}"><img src="/images/${g}.svg" alt="" width="70" height="70"><span>${games.find(x=>x[0]===g)[1]}</span></button>`).join('')}</div><div class="scene-controls"><span id="sceneCounter" aria-live="polite">${String(featuredIndex+1).padStart(2,'0')} / 04</span><button id="scenePrev" aria-label="Предыдущая игра">←</button><button id="sceneNext" aria-label="Следующая игра">→</button></div></div></section>`;
+}
+function bindScene(){
+ const hero=$('.immersive-hero'),viewport=$('#sceneViewport'),object=$('.immersive-object'),artwork=$('.immersive-object-art');
+ const media=matchMedia('(prefers-reduced-motion: reduce)'),floaters=[...hero.querySelectorAll('.casino-floater')],bubbles=hero.querySelector('.casino-bubbles');
+ const gs=window.gsap;
+ let mouse={x:0,y:0},current={x:0,y:0},spin={val:0},frame=0,interval=0,visible=true,disposed=false,switching=false;
+ const enabled=()=>!media.matches&&!casinoMotionPaused&&visible&&!document.hidden;
+ // Preload both atmosphere variants' game images before the first switch.
+ featuredGames.forEach(type=>{const image=new Image();image.src='/images/'+type+'.svg'});
+ function updateFlavor(flavor){
+  casinoFlavor=flavor;document.body.dataset.casinoFlavor=flavor;
+  const colors=flavor==='blue'?{'--bg-inner':'#0b4f8a','--bg-mid':'#04294e','--bg-outer':'#010c14'}:{'--bg-inner':'#0b8a78','--bg-mid':'#044e3b','--bg-outer':'#011411'};
+  if(gs&&!media.matches&&!casinoMotionPaused)gs.to(document.body,{...colors,duration:1.5,ease:'power2.inOut'});
+  else for(const [key,value]of Object.entries(colors))document.body.style.setProperty(key,value);
+  hero.querySelectorAll('[data-flavor]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.flavor===flavor)));
+ }
+ function resetObject(){object.style.transform='rotateX(0deg) rotateY(0deg) rotateZ(25deg)';object.style.filter='blur(0px)'}
+ function animate(){
+  if(disposed||!enabled()){frame=0;return}
+  current.x+=(mouse.x-current.x)*.05;current.y+=(mouse.y-current.y)*.05;
+  object.style.transform=`rotateX(${current.y*20}deg) rotateY(${current.x*40+spin.val}deg) rotateZ(25deg)`;
+  floaters.forEach((el,i)=>{const factor=i<6?60:-30,dx=(i%3-1)*.6-current.x,dy=(Math.floor(i/3)-1)*.4-current.y,d=Math.hypot(dx,dy),force=Math.max(0,1-d/1.2),repel=force*-80;el.style.transform=`translate(${current.x*factor+dx*repel}px,${current.y*factor+dy*repel}px) rotate(${current.x*(1+force*5)*6}deg)`});
+  frame=requestAnimationFrame(animate);
+ }
+ function bubble(){
+  if(!enabled()||bubbles.childElementCount>=26)return;
+  const el=document.createElement('span'),size=10+Math.random()*20;
+  el.className='casino-bubble';el.style.cssText=`left:${Math.random()*100}%;width:${size}px;height:${size}px;opacity:${.2+Math.random()*.4};animation-duration:${4+Math.random()*6}s`;
+  el.onanimationend=()=>el.remove();bubbles.append(el);
+ }
+ function sync(){
+  hero.classList.toggle('motion-paused',!enabled());
+  if(!enabled()){if(frame)cancelAnimationFrame(frame);frame=0;clearInterval(interval);interval=0;bubbles.replaceChildren();if(gs){gs.killTweensOf(spin);gs.killTweensOf(object);gs.killTweensOf(floaters)}switching=false;resetObject();floaters.forEach(el=>{el.style.transform='';el.style.opacity='';el.style.scale=''});artwork.innerHTML=immersiveArt(featuredGames[featuredIndex]);}
+  else{if(!frame)frame=requestAnimationFrame(animate);if(!interval){bubble();interval=setInterval(bubble,400)}}
+ }
+ function change(index){
+  if(switching)return;
+  featuredIndex=(index+featuredGames.length)%featuredGames.length;
+  const type=featuredGames[featuredIndex];object.dataset.featured=type;object.setAttribute('aria-label','Играть: '+games.find(g=>g[0]===type)[1]);
+  $('#sceneCounter').textContent=String(featuredIndex+1).padStart(2,'0')+' / 04';
+  hero.querySelectorAll('[data-hero-index]').forEach(b=>{const active=Number(b.dataset.heroIndex)===featuredIndex;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+  object.querySelector('.immersive-object-name').textContent=games.find(g=>g[0]===type)[1];
+  updateFlavor(featuredIndex%2?'blue':'classic');
+  const replace=()=>{if(!disposed)artwork.innerHTML=immersiveArt(type)};
+  if(!gs||!enabled()){replace();return}
+  switching=true;spin.val=0;
+  gs.to(floaters,{scale:.1,opacity:0,duration:.5,ease:'power2.in',onComplete:()=>{if(!disposed)gs.to(floaters,{scale:1,opacity:1,duration:.9,delay:.3,ease:'back.out(1.5)'})}});
+  gs.to(object,{filter:'blur(15px)',duration:.6,ease:'power2.in'});
+  gs.to(spin,{val:360,duration:.6,ease:'power2.in',onComplete:()=>{if(disposed)return;replace();gs.to(object,{filter:'blur(0px)',duration:1.5,ease:'back.out(.7)'});gs.to(spin,{val:720,duration:1.5,ease:'back.out(.7)',onComplete:()=>{spin.val=0;switching=false}})}});
+ }
+ $('#sceneNext').onclick=()=>change(featuredIndex+1);$('#scenePrev').onclick=()=>change(featuredIndex-1);
+ hero.querySelectorAll('[data-hero-index]').forEach(b=>b.onclick=()=>change(Number(b.dataset.heroIndex)));
+ hero.querySelectorAll('[data-flavor]').forEach(b=>b.onclick=()=>updateFlavor(b.dataset.flavor));
+ object.onclick=()=>{if(!switching)openGame(featuredGames[featuredIndex])};
+ viewport.onpointermove=e=>{if(e.pointerType==='touch')return;const r=viewport.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width-.5)*2;mouse.y=((e.clientY-r.top)/r.height-.5)*2};
+ viewport.onpointerleave=()=>{mouse={x:0,y:0}};
+ $('#motionToggle').onclick=()=>{casinoMotionPaused=!casinoMotionPaused;$('#motionToggle').textContent=casinoMotionPaused?'Включить движение':'Остановить движение';$('#motionToggle').setAttribute('aria-pressed',String(casinoMotionPaused));sync()};
+ const visibility=()=>sync();document.addEventListener('visibilitychange',visibility);media.addEventListener('change',sync);
+ const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync()});observer.observe(hero);
+ updateFlavor(casinoFlavor);sync();
+ disposeCasinoScene=()=>{disposed=true;if(frame)cancelAnimationFrame(frame);clearInterval(interval);observer.disconnect();document.removeEventListener('visibilitychange',visibility);media.removeEventListener('change',sync);if(gs){gs.killTweensOf(spin);gs.killTweensOf(object);gs.killTweensOf(floaters);gs.killTweensOf(document.body)}bubbles.replaceChildren()};
+}
+function render(){disposeCasinoScene();disposeCasinoScene=()=>{};clearTimeout(tickTimer);document.body.dataset.view=view;$('#lobbyNav').classList.toggle('active',view!=='history');$('#historyNav').classList.toggle('active',view==='history');if(view==='lobby')renderLobby();else if(view==='history')renderHistory();else renderGame()}
 function renderLobby(){
  $('#main').innerHTML=`${heroScene()}<section class="room-intro" aria-labelledby="roomTitle"><div><h1 id="roomTitle">Игры за одним столом.</h1><p>От первой раздачи до последнего сектора. Выбирайте игру — правила найдутся за столом.</p></div><aside class="room-note"><span aria-hidden="true">♧</span><p>50 000 виртуальных монет на старте.<br>Без платежей и вывода средств.</p></aside></section><section id="catalog" aria-label="Каталог игр"><div class="room-toolbar"><div class="filters" role="group" aria-label="Категории игр">${[['all','Все игры',10],['cards','Карточные',4],['table','Настольные',2],['slots','Слоты',1],['quick','Быстрые',3]].map(([id,title,n])=>`<button class="filter ${category===id?'active':''}" data-category="${id}" aria-pressed="${category===id}">${title}<small>${n}</small></button>`).join('')}</div><div class="search"><input id="search" name="game-search" type="search" autocomplete="off" aria-label="Поиск игр" placeholder="Например, покер…" value="${esc(query)}"></div></div><div class="game-grid poster-grid" id="gameGrid"></div><p id="catalogStatus" class="room-catalog-status" role="status" aria-live="polite"></p></section><div class="room-bottom"><p>Монеты — часть игры.<br><strong>Они не имеют денежной стоимости.</strong></p><button id="roomRules" class="text-button">Как начать играть?</button></div>`;
  renderCatalog();bindScene();$('#heroPlay').onclick=()=>$('#catalog').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
