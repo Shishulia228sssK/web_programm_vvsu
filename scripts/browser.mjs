@@ -31,8 +31,12 @@ try{
   }
   assert.equal(await page.locator('.poster').count(),10);
   assert.equal(await page.locator('.poster-roulette').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(40, 83, 71)','Redesign CSS is actually applied');
-  const svgMarkup=await page.locator('.poster-art svg').evaluateAll(nodes=>nodes.map(n=>n.innerHTML));
-  assert.equal(new Set(svgMarkup).size,10,'All ten games have distinct illustrations');
+  const images=await page.locator('.poster-art img').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('src')));
+  assert.equal(new Set(images).size,10,'All games use different internet-sourced illustrations');
+  for(const src of images){const r=await context.request.get(url+src);assert.equal(r.status(),200);assert.match(r.headers()['content-type'],/image\/svg\+xml/)}
+  await page.locator('#sceneNext').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'blackjack');
+  await page.locator('#scenePrev').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'roulette');
+  await page.locator('.scene-card-front').click();assert.ok(await page.locator('.roulette-board').isVisible());await page.locator('#backBtn').click();
   for(const theme of ['light','dark']){
    await page.evaluate(theme=>{document.documentElement.dataset.theme=theme;localStorage.setItem('arcadeTheme',theme)},theme);
    for(const width of [320,390,768,1440]){
@@ -130,7 +134,13 @@ try{
   }
   await page.locator('#clearBet').click();await page.locator('[data-numbers="17"]').click();await page.locator('.bet-spot[data-numbers="3,6"]').click();assert.match(await page.locator('.bet-list').textContent(),/3\/6/);
   if(mobile){const sizes=await page.locator('.roulette-scroll').evaluate(e=>({scroll:e.scrollWidth,width:e.clientWidth}));assert.ok(sizes.scroll>sizes.width,'Mobile roulette scrolls inside its field');assert.ok(await page.locator('.roulette-number').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=14),'Mobile roulette numbers are readable');assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Roulette does not overflow page');}
-  const roulette=await clickRequest('#startBtn','game/start');assert.equal(roulette.game.done,true);assert.equal(roulette.game.totalCost,200);assert.equal(roulette.game.bets.length,2);
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  const rouletteRequest=clickRequest('#startBtn','game/start');
+  await page.waitForSelector('.roulette-wheel.is-spinning');
+  assert.ok(await page.locator('.wheel-face').evaluate(e=>e.getAnimations().some(a=>a.playState==='running')),'Roulette wheel animates');
+  assert.equal(await page.locator('.roulette-ball-orbit').count(),1,'Ball spins independently');
+  const roulette=await rouletteRequest;
+  await page.emulateMedia({reducedMotion:'reduce'});assert.equal(roulette.game.done,true);assert.equal(roulette.game.totalCost,200);assert.equal(roulette.game.bets.length,2);
   await page.locator('#clearBet').click();
   await page.locator('[data-series="voisins"]').click();
   assert.equal(money(await page.locator('#cost').innerText()),900,'New stake replaces previous round cost');
