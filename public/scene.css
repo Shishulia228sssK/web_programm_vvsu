@@ -149,3 +149,50 @@ body[data-view=lobby] .poster:hover{box-shadow:0 0 0 3px #fbcfe8}.motion-paused 
 
 /* Keep the roulette poster's base felt visible when CSS custom properties are unavailable. */
 .game-card.poster.poster-roulette{background-color:#285347}
+
+
+/* aurora-photos-v1 — photographic casino lobby, existing game logic preserved. */
+body[data-view=lobby]{position:relative;isolation:isolate;background:#040b16!important}
+body[data-view=lobby]::before{content:"";position:fixed;inset:-25%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 15% 25%,#08746399,transparent 48%),radial-gradient(ellipse at 85% 20%,#4a288c99,transparent 50%),radial-gradient(ellipse at 70% 80%,#07568eaa,transparent 50%),radial-gradient(ellipse at 25% 85%,#71295f66,transparent 45%);filter:blur(45px);animation:casino-aurora 22s ease-in-out infinite alternate}
+@keyframes casino-aurora{0%{transform:translate(-4%,0) rotate(-8deg);filter:blur(45px) hue-rotate(0deg)}50%{transform:translate(5%,-3%) rotate(6deg);filter:blur(45px) hue-rotate(45deg)}100%{transform:translate(0,4%) rotate(-3deg);filter:blur(45px) hue-rotate(110deg)}}
+body[data-casino-motion=paused]::before{animation-play-state:paused}
+body[data-view=lobby] .header{border-color:#ffffff1c;backdrop-filter:blur(16px)}
+body[data-view=lobby] .immersive-hero{background:#06101e8c;border:1px solid #b99a642f;border-radius:20px;box-shadow:0 24px 80px #0003}
+.immersive-stack .immersive-object{left:10%;top:14%;width:80%;height:72%;border-radius:13px;border:1px solid #e3bf7d;background:linear-gradient(#06101d33,#06101d66),var(--hero-photo) center/cover;box-shadow:0 30px 55px #0008;animation:casino-enter .8s both;overflow:visible}
+.immersive-object:before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(transparent 45%,#030813ed);pointer-events:none}
+.immersive-object-art{border-radius:inherit;overflow:visible}
+.immersive-object-name{bottom:14px;left:20px;right:12px;text-align:left;transform:none;font:normal clamp(20px,2vw,32px)/1.2 Georgia,serif;color:#fff0d4;text-shadow:0 2px 8px #000}
+.immersive-object-art>.showcase-photo{width:100%;height:100%;object-fit:cover;border-radius:12px;filter:none}
+.immersive-object-art>.hero-rocket{position:absolute;left:23%;top:12%;width:55%;height:70%;object-fit:contain;filter:drop-shadow(0 10px 20px #0009)}
+.immersive-object[data-featured=crash]{background:linear-gradient(#050c1d33,#050c1d99),var(--hero-photo) center/cover}
+.immersive-object[data-featured=roulette] .showcase-wheel{inset:7% 20% 20%;border-width:9px;background:#10281d}
+.immersive-object[data-featured=roulette] .showcase-hub{font-size:24px}
+.immersive-object[data-featured=slots] .showcase-slot-machine{inset:-4% 7% 7%;filter:drop-shadow(0 15px 20px #0009)}
+.hero-preview{position:absolute;display:block;left:0;top:23%;width:72%;height:62%;padding:0;border:1px solid #b59a6c88;border-radius:12px;background:#08121d;overflow:hidden;text-align:left;box-shadow:0 20px 40px #0006;cursor:pointer}
+.hero-preview img{display:block;width:100%;height:100%;object-fit:cover;opacity:.66}
+.hero-preview span{position:absolute;left:16px;right:10px;bottom:14px;font:22px Georgia,serif;color:#f6e9cc;text-shadow:0 2px 5px #000}
+.hero-preview:after{content:"";position:absolute;inset:30% 0 0;background:linear-gradient(transparent,#020815b3);pointer-events:none}
+.hero-preview-back{transform:rotate(-17deg);z-index:0}
+.hero-preview-side{left:24%;top:21%;transform:rotate(13deg);z-index:1}
+.immersive-stack .immersive-object{z-index:2}
+.hero-preview:hover img{opacity:.9}
+.immersive-game img{width:52px;height:46px;object-fit:cover;border-radius:7px}
+body[data-view=lobby] .game-grid.poster-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+body[data-view=lobby] .game-card.poster{grid-column:span 1;min-height:260px;height:260px;border:1px solid #bc9a6159;border-radius:12px;background-color:#07121d;color:#fff0d7;box-shadow:0 8px 25px #0002;transition:transform .3s,border-color .3s,box-shadow .3s}
+body[data-view=lobby] .game-card.poster:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,#02071205 25%,#02071255 55%,#020712f2 100%);pointer-events:none}
+body[data-view=lobby] .game-card.poster:after{content:none}
+body[data-view=lobby] .game-card.poster .poster-art{inset:0;opacity:1;z-index:0;display:block;transform:none;width:100%;height:100%}
+body[data-view=lobby] .game-card.poster .poster-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;filter:brightness(.86) saturate(.88);transform:none;transition:transform .8s,filter .5s}
+body[data-view=lobby] .game-card.poster:hover .poster-art img{transform:scale(1.045);filter:brightness(1) saturate(1)}
+body[data-view=lobby] .game-card.poster .poster-art img.photo-fallback{object-fit:contain;padding:35px 60px 60px;background:#142631}
+body[data-view=lobby] .game-card.poster .poster-copy{position:absolute;top:auto;left:22px;right:20px;bottom:47px;align-items:flex-start;text-align:left;max-width:none;gap:6px;z-index:2}
+body[data-view=lobby] .game-card.poster .poster-title{font:normal 30px/1.1 Georgia,serif;letter-spacing:-.5px;max-width:none;color:#fff0d7}
+body[data-view=lobby] .game-card.poster .poster-description{font:12px/1.5 Arial,sans-serif;color:#e3d9c9;max-width:none}
+body[data-view=lobby] .game-card.poster .poster-open{left:22px;right:20px;bottom:13px;z-index:2;color:#edc77f;opacity:1;font-size:12px}
+body[data-view=lobby] .game-card.poster:hover{transform:translateY(-4px);border-color:#e3bf7d;box-shadow:0 15px 40px #0005}
+body[data-view=lobby] .room-intro h1{font-family:Georgia,serif;color:#fff0d7}
+body[data-view=lobby] .room-note{background:#07121d99;border-color:#b99a6433}
+@media(max-width:1000px){body[data-view=lobby] .game-grid.poster-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.immersive-viewport.scene-viewport{height:440px}.immersive-layout{grid-template-columns:42% 58%}.immersive-stack .immersive-object{height:68%}.hero-preview span{font-size:18px}}
+@media(max-width:650px){body[data-view=lobby] .immersive-hero{padding:20px 16px}.immersive-layout{display:flex;flex-direction:column;min-height:0}.immersive-copy{width:100%;padding:20px 8px}.immersive-hero .immersive-copy h1{font-size:90px;letter-spacing:-4px}.immersive-viewport.scene-viewport{width:100%;height:320px}.immersive-stack .immersive-object{top:12%;height:70%}.hero-preview{top:22%;height:62%}.hero-preview-side{top:20%}body[data-view=lobby] .game-grid.poster-grid{gap:12px}body[data-view=lobby] .game-card.poster{min-height:250px;height:250px}body[data-view=lobby] .game-card.poster .poster-copy{left:12px;right:10px;bottom:43px}body[data-view=lobby] .game-card.poster .poster-title{font-size:24px}body[data-view=lobby] .game-card.poster .poster-description{font-size:11px}body[data-view=lobby] .game-card.poster .poster-open{left:12px;right:12px}.immersive-object-name{font-size:22px;left:15px}.immersive-game{padding:7px;gap:6px}.immersive-game img{width:38px;height:38px}}
+@media(max-width:360px){body[data-view=lobby] .game-grid.poster-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){body[data-view=lobby]::before{animation:none}body[data-view=lobby] .game-card.poster:hover{transform:none}}
