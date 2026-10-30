@@ -29,6 +29,7 @@ function sceneCards(){return featureCard(featuredGames[(featuredIndex+3)%4],'bac
 let casinoFlavor='classic',casinoMotionPaused=false,disposeCasinoScene=()=>{};
 function immersiveArt(type){
  if(type==='roulette')return `<span class="showcase-wheel">${wheelSvg(0)}<span class="showcase-hub">ЛК</span></span>`;
+ if(type==='slots')return `<span class="showcase-slot-machine"><img src="/images/slots.svg" alt="" width="600" height="600" decoding="async"><span class="showcase-slot-window" aria-hidden="true">${[0,1,2].map((_,i)=>`<span class="showcase-slot-reel"><span class="showcase-slot-track" style="--reel-delay:${i*-0.24}s"><span class="showcase-slot-symbol">7</span><span class="showcase-slot-symbol">◆</span><span class="showcase-slot-symbol">BAR</span><span class="showcase-slot-symbol">♣</span><span class="showcase-slot-symbol">7</span><span class="showcase-slot-symbol">◆</span><span class="showcase-slot-symbol">BAR</span><span class="showcase-slot-symbol">♣</span></span></span>`).join('')}</span></span>`;
  return `<img src="/images/${type}.svg" alt="" width="600" height="600" decoding="async">`;
 }
 function heroScene(){
