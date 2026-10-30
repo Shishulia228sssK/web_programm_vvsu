@@ -76,7 +76,19 @@ function bindScene(){
   hero.querySelectorAll('[data-hero-index]').forEach(b=>{const active=Number(b.dataset.heroIndex)===featuredIndex;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
   object.querySelector('.immersive-object-name').textContent=games.find(g=>g[0]===type)[1];
   updateFlavor(featuredIndex%2?'blue':'classic');
-  const replace=()=>{if(!disposed)artwork.innerHTML=immersiveArt(type)};
+  const replace=()=>{
+  if(disposed)return;
+  gs.killTweensOf(artwork.querySelector('img'));gs.killTweensOf(artwork.querySelector('.rocket-exhaust'));
+  object.dataset.rocketGone='false';object.setAttribute('aria-label','Играть: '+games.find(g=>g[0]===type)[1]);
+  artwork.innerHTML=immersiveArt(type);
+  if(type==='crash'&&enabled()){
+   artwork.insertAdjacentHTML('beforeend','<span class="rocket-exhaust" aria-hidden="true"></span>');
+   const rocket=artwork.querySelector('img'),exhaust=artwork.querySelector('.rocket-exhaust');
+   object.setAttribute('aria-label','Ракета Crash улетает. Выбрать игру Crash');
+   gs.to(rocket,{xPercent:210,yPercent:-175,rotation:-36,scale:.12,opacity:0,duration:3.2,ease:'power2.in',onComplete:()=>{if(!disposed){object.dataset.rocketGone='true';object.setAttribute('aria-label','Ракета улетела в пустоту. Выбрать игру Crash')}}});
+   gs.fromTo(exhaust,{opacity:.85,scale:1},{opacity:0,scale:.1,xPercent:180,yPercent:-125,duration:2.2,ease:'power2.in'});
+  }
+ };
   if(!gs||!enabled()){replace();return}
   switching=true;spin.val=0;
   gs.to(floaters,{scale:.1,opacity:0,duration:.5,ease:'power2.in',onComplete:()=>{if(!disposed)gs.to(floaters,{scale:1,opacity:1,duration:.9,delay:.3,ease:'back.out(1.5)'})}});

@@ -80,3 +80,54 @@ body[data-view=lobby] .poster:hover{box-shadow:0 0 0 3px #fbcfe8}.motion-paused 
 @media(max-width:1200px){.immersive-hero.scene-hero{padding:22px 26px;min-height:0}.immersive-layout{grid-template-columns:43% 57%;min-height:470px}.immersive-copy{padding-left:8px}.immersive-hero .immersive-copy h1{font-size:clamp(5rem,11vw,9rem);letter-spacing:-5px}.immersive-viewport.scene-viewport{height:430px}.immersive-bottom{gap:15px;flex-wrap:wrap}.immersive-games{order:3;width:100%;justify-content:center}.immersive-game{flex:1;max-width:none;justify-content:center}.immersive-bottom .scene-controls{margin-left:auto}.casino-floater{width:calc(var(--size)*.7);height:calc(var(--size)*.7)}.showcase-hub{font-size:33px}}
 @media(max-width:650px){.immersive-hero.scene-hero{padding:18px 18px 22px;border-radius:18px;margin-bottom:28px}.immersive-top{align-items:start;gap:12px;flex-direction:column}.immersive-top>p{font-size:10px}.flavor-switch{width:100%;gap:5px}.flavor-switch button{font-size:10px;padding:7px 10px;min-height:36px}#motionToggle{margin-left:auto;font-size:9px;max-width:125px;padding:7px}.immersive-layout{grid-template-columns:1fr;min-height:0;position:relative}.immersive-copy{padding:30px 2px 0;z-index:3}.immersive-kicker{font-size:10px;margin:0 0 24px}.immersive-hero .immersive-copy h1{font-size:clamp(5rem,19vw,7rem);letter-spacing:-4px;line-height:.8;margin-bottom:23px}.immersive-description{font-size:12px!important;margin-bottom:18px!important}.immersive-copy .button{font-size:12px;min-height:44px;padding:8px 11px 8px 19px;gap:21px}.immersive-copy .button span{width:27px;height:27px;font-size:21px}.immersive-viewport.scene-viewport{height:300px;margin-top:4px;max-width:100%;width:100%}.immersive-stack .immersive-object{width:78%;height:85%;left:11%;top:3%;max-height:290px}.showcase-wheel{border-width:10px}.showcase-hub{font-size:27px;border-width:3px}.immersive-object-name{font-size:13px;bottom:-6px}.immersive-halo{inset:9% 0}.immersive-bottom{gap:14px;padding-top:18px}.immersive-bottom>p{font-size:10px;max-width:170px}.immersive-bottom>p span{font-size:9px}.immersive-bottom .scene-controls{gap:4px}.immersive-bottom .scene-controls>span{display:none}.immersive-bottom .scene-controls button{width:36px;height:36px}.immersive-games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.immersive-game{justify-content:start;padding:8px;min-height:59px;font-size:10px;border-radius:10px;gap:7px}.immersive-game img{width:36px;height:36px}.casino-floater{width:calc(var(--size)*.5);height:calc(var(--size)*.5);opacity:.17}.casino-token{font-size:calc(var(--size)*.3)}.room-intro h1{font-size:34px}.room-note{margin-top:15px}}
 @media(prefers-reduced-motion:reduce){body{transition:none}.immersive-object,.immersive-object-art,.casino-token,.casino-bubble{animation:none!important}.immersive-stack .immersive-object{opacity:1;will-change:auto}.casino-bubbles{display:none}}
+
+/* Casino floor cards: felt, lacquer, metal and betting chips. */
+.poster-grid{gap:17px}
+.game-card.poster{border:1px solid #c2a86a;border-radius:11px;background:radial-gradient(ellipse at 50% 45%,#164b3e 0%,#0c322a 62%,#08241f 100%);color:#f3e8c9;box-shadow:inset 0 0 0 4px #071b17,inset 0 0 0 5px #b89b5b55,0 7px 20px #00140f88;isolation:isolate}
+.game-card.poster:hover{transform:translateY(-3px);border-color:#fbcfe8;box-shadow:inset 0 0 0 4px #071b17,inset 0 0 0 5px #fbcfe866,0 11px 27px #00140fcc}
+.game-card.poster:before{content:"";position:absolute;inset:12px;border:1px solid #dec58a52;border-radius:7px;z-index:-1;pointer-events:none}
+.poster:after{content:"♠";position:absolute;right:23px;top:18px;color:#e7d4a577;font:17px Georgia;pointer-events:none}
+.poster-title{font:600 32px/1.05 Georgia,"Times New Roman",serif;letter-spacing:.1px;text-shadow:0 2px 8px #071b17}
+.poster-description{color:#e7ddc3;font-size:12px}
+.poster-open{border-top:1px solid #dec58a56;padding-top:12px;color:#f2e5c4}
+.poster-open>span{display:grid;place-items:center;border:1px solid #dec58a88;width:29px;height:29px;border-radius:50%}
+.poster-art img{filter:drop-shadow(0 9px 5px #00130f77) saturate(.8)}
+.poster-roulette{--poster-bg:#0c473a;--poster-ink:#f3e8c9;background:radial-gradient(ellipse at 64% 55%,#205c48,#0b3028 72%);grid-column:span 2}
+.poster-roulette:after{content:"37 · ZERO";font:10px "Trebuchet MS",sans-serif;letter-spacing:1px}
+.poster-roulette .poster-title{font-size:55px}
+.poster-roulette .poster-description{color:#eee1bd}
+.poster-blackjack{--poster-bg:#632b38;--poster-ink:#fae8c8;background:radial-gradient(ellipse at 72% 60%,#773b47,#341e26 82%);border-color:#cfad72}
+.poster-blackjack:after{content:"21"}
+.poster-blackjack .poster-title{font:600 38px/1 Impact,"Arial Narrow",sans-serif;letter-spacing:.5px}
+.poster-blackjack .poster-art img,.poster-russian .poster-art img,.poster-threecard .poster-art img,.poster-holdem .poster-art img,.poster-baccarat .poster-art img{filter:drop-shadow(0 10px 8px #0009)}
+.poster-russian{--poster-bg:#594131;--poster-ink:#f1dfbd;background:radial-gradient(ellipse at 70% 62%,#876340,#34281e 80%);border-color:#d0b883}
+.poster-russian:after{content:"♣"}
+.poster-threecard{--poster-bg:#173d34;--poster-ink:#f3e8ce;background:radial-gradient(ellipse at 50% 63%,#28644c,#102d26 82%)}
+.poster-threecard:after{content:"A · K · Q";font:10px Georgia;letter-spacing:2px}
+.poster-holdem{--poster-bg:#244c3d;--poster-ink:#f2e4c1;grid-column:span 2;background:radial-gradient(ellipse at 68% 72%,#356448,#102d26 83%)}
+.poster-holdem:after{content:"♠ ♥ ♦ ♣";letter-spacing:3px}
+.poster-holdem .poster-title{font-size:46px}
+.poster-baccarat{--poster-bg:#283247;--poster-ink:#f3e8ce;background:radial-gradient(ellipse at 50% 65%,#384b56,#202630 84%);border-color:#beaa76}
+.poster-baccarat:after{content:"BANKER / PLAYER";font:8px "Trebuchet MS",sans-serif}
+.poster-slots{--poster-bg:#544028;--poster-ink:#ffe2a2;grid-column:span 2;background:radial-gradient(ellipse at 65% 60%,#76532d,#35251c 82%);border-color:#e3bd72}
+.poster-slots:after{content:"777";font:700 19px Georgia;color:#f5cf82}
+.poster-slots .poster-title{font:45px Impact,"Arial Narrow",sans-serif;letter-spacing:1px}
+.poster-crash{--poster-bg:#172f41;--poster-ink:#e7eff1;grid-column:span 2;background:radial-gradient(ellipse at 68% 58%,#28546a,#102130 80%);border-color:#96b1b1}
+.poster-crash:after{content:"↗";font-size:27px;color:#fbcfe8}
+.poster-crash .poster-title{font:44px Impact,"Arial Narrow",sans-serif;letter-spacing:1px}
+.poster-mines{--poster-bg:#20483d;--poster-ink:#e5edcf;background:radial-gradient(ellipse at 65% 62%,#397354,#142d27 84%)}
+.poster-mines:after{content:"◆";color:#d4c397}
+.poster-mines .poster-title{font:600 42px "Trebuchet MS",sans-serif}
+.poster-dice{--poster-bg:#263b38;--poster-ink:#f5e6c8;background:radial-gradient(ellipse at 68% 61%,#455f50,#202b2a 84%);border-color:#c9b98d}
+.poster-dice:after{content:"⚄";font-size:22px;color:#eee1bd}
+.poster-dice .poster-title{font-style:italic;font-size:44px}
+.poster-grid.is-filtered .poster{grid-column:span 1}
+.poster-grid.is-filtered .poster-roulette .poster-title,.poster-grid.is-filtered .poster-holdem .poster-title{font-size:34px}
+.poster-open,.poster-title,.poster-description{position:relative;z-index:1}
+.poster-art{opacity:.86}
+.immersive-object-art{position:relative}
+.immersive-object-art .rocket-exhaust{position:absolute;left:48%;top:56%;width:24px;height:95px;transform:rotate(43deg);transform-origin:50% 0%;border-radius:50%;background:linear-gradient(180deg,#fbcfe8 0%,#9fe6ff88 34%,transparent 100%);filter:blur(7px);pointer-events:none;will-change:transform,opacity}
+.immersive-object-art:has(.rocket-exhaust) img{will-change:transform,opacity;transform-origin:center}
+@media(max-width:950px){.game-card.poster{min-height:290px;height:290px}}
+@media(max-width:650px){.game-card.poster{min-height:255px;height:255px}.poster-roulette .poster-title{font-size:39px}.poster-holdem .poster-title{font-size:34px}.poster-crash .poster-title{font-size:35px}}
+@media(prefers-reduced-motion:reduce){.immersive-object-art .rocket-exhaust{display:none}.game-card.poster,.game-card.poster:hover{transform:none}}
