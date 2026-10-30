@@ -24,28 +24,51 @@ try{
   await page.waitForSelector('main > *');
   await page.keyboard.press('Tab');assert.ok(await page.evaluate(()=>document.activeElement!==document.body),'Keyboard focus reaches control');
   assert.equal(await page.title(),'ЛУДКА.COM — клуб виртуальных игр');
-  const sceneStyle=await context.request.get(url+'/scene.css');assert.equal(sceneStyle.status(),200,'Scene stylesheet served');
-  assert.equal(await page.locator('.scene-hero').evaluate(e=>getComputedStyle(e).display),'block','Scene layout stylesheet applied');
-  await page.locator('#sceneNext').click();assert.equal(await page.locator('#sceneCounter').innerText(),'02 / 04');
-  assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'blackjack');
-  await page.locator('#scenePrev').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'roulette');
-  if(!mobile){
-   await page.emulateMedia({reducedMotion:'no-preference'});
-   const area=await page.locator('#sceneViewport').boundingBox();
-   await page.mouse.move(area.x+area.width*.7,area.y+area.height*.6);
-   assert.notEqual(await page.locator('#sceneStack').evaluate(e=>e.style.getPropertyValue('--tilt-y')),'','Pointer moves the spatial card stack');
-   await page.emulateMedia({reducedMotion:'reduce'});
-   assert.equal(await page.locator('#sceneStack').evaluate(e=>getComputedStyle(e).transform),'none','Reduced motion disables parallax');
+  for(const asset of ['/style.css','/scene.css']){
+   const response=await context.request.get(url+asset);
+   assert.equal(response.status(),200,'Stylesheet served: '+asset);
+   assert.match(response.headers()['content-type'],/text\/css/);
   }
-  await page.locator('#themeBtn').click();assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
-  await page.reload();await page.waitForSelector('.scene-hero');assert.equal(await page.locator('html').getAttribute('data-theme'),'light','Theme retained after reload');
-  await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-light.png`,fullPage:true});
-  await page.locator('#themeBtn').click();assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
-  await page.locator('.scene-card-front').click();assert.ok(await page.locator('.roulette-board').isVisible(),'Featured card opens its game');
-  await page.locator('#backBtn').click();
-  assert.equal(await page.locator('.title-star').evaluate(e=>getComputedStyle(e).animationName),'none','Reduced motion disables decorative animation');
-  if(mobile){await page.setViewportSize({width:320,height:720});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'320px lobby has no overflow');await page.setViewportSize(viewport);}
-  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Lobby has no horizontal overflow');
+  assert.equal(await page.locator('.poster').count(),10);
+  assert.equal(await page.locator('.poster-roulette').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(40, 83, 71)','Redesign CSS is actually applied');
+  const images=await page.locator('.poster-art img').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('src')));
+  assert.equal(new Set(images).size,10,'All games use different internet-sourced illustrations');
+  for(const src of images){const r=await context.request.get(url+src);assert.equal(r.status(),200);assert.match(r.headers()['content-type'],/image\/svg\+xml/)}
+  await page.locator('#sceneNext').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'blackjack');
+  await page.locator('#scenePrev').click();assert.equal(await page.locator('.scene-card-front').getAttribute('data-featured'),'roulette');
+  await page.locator('.scene-card-front').click();assert.ok(await page.locator('.roulette-board').isVisible());await page.locator('#backBtn').click();
+  for(const theme of ['light','dark']){
+   await page.evaluate(theme=>{document.documentElement.dataset.theme=theme;localStorage.setItem('arcadeTheme',theme)},theme);
+   for(const width of [320,390,768,1440]){
+    await page.setViewportSize({width,height:900});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),theme+' lobby has no overflow at '+width);
+    const posterBounds=await page.locator('.poster').evaluateAll(nodes=>nodes.map(n=>({width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height})));
+    assert.ok(posterBounds.every(b=>b.width>=120&&b.height>=250),'Cards retain usable size');
+    const filter=page.locator('[data-category=quick]');
+    await filter.click();
+    assert.equal(await page.locator('[data-game]').count(),3);
+    assert.equal(await filter.getAttribute('aria-pressed'),'true');
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Filtered layout does not overflow');
+    await page.locator('[data-category=all]').click();
+    await page.screenshot({path:`test-results/posters-${theme}-${width}.png`,fullPage:true});
+   }
+  }
+  await page.setViewportSize(viewport);
+  await page.locator('#themeBtn').click();
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+  await page.reload();await page.waitForSelector('.poster');
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'light','Theme retained after reload');
+  assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#eeeef4');
+  await page.locator('#themeBtn').click();
+  await page.locator('#search').fill('несуществующая');
+  await page.locator('#resetSearch').click();
+  assert.equal(await page.locator('[data-game]').count(),10);
+  for(const game of ['roulette','blackjack','russian','threecard','holdem','baccarat','slots','crash','mines','dice']){
+   await page.locator('[data-game='+game+']').click();
+   assert.ok(await page.locator('#table').isVisible(),'Poster opens '+game);
+   await page.locator('#backBtn').click();
+  }
+  assert.equal(await page.locator('.poster').first().evaluate(e=>getComputedStyle(e).animationName),'none','No automatic poster animation');
   await page.screenshot({path:`test-results/${mobile?'mobile':'desktop'}-lobby.png`,fullPage:true});
   const username=mobile?'browser_mobile':'browser_desktop';
   const clickRequest=async(selector,endpoint)=>{
@@ -111,7 +134,13 @@ try{
   }
   await page.locator('#clearBet').click();await page.locator('[data-numbers="17"]').click();await page.locator('.bet-spot[data-numbers="3,6"]').click();assert.match(await page.locator('.bet-list').textContent(),/3\/6/);
   if(mobile){const sizes=await page.locator('.roulette-scroll').evaluate(e=>({scroll:e.scrollWidth,width:e.clientWidth}));assert.ok(sizes.scroll>sizes.width,'Mobile roulette scrolls inside its field');assert.ok(await page.locator('.roulette-number').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=14),'Mobile roulette numbers are readable');assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Roulette does not overflow page');}
-  const roulette=await clickRequest('#startBtn','game/start');assert.equal(roulette.game.done,true);assert.equal(roulette.game.totalCost,200);assert.equal(roulette.game.bets.length,2);
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  const rouletteRequest=clickRequest('#startBtn','game/start');
+  await page.waitForSelector('.roulette-wheel.is-spinning');
+  assert.ok(await page.locator('.wheel-face').evaluate(e=>e.getAnimations().some(a=>a.playState==='running')),'Roulette wheel animates');
+  assert.equal(await page.locator('.roulette-ball-orbit').count(),1,'Ball spins independently');
+  const roulette=await rouletteRequest;
+  await page.emulateMedia({reducedMotion:'reduce'});assert.equal(roulette.game.done,true);assert.equal(roulette.game.totalCost,200);assert.equal(roulette.game.bets.length,2);
   await page.locator('#clearBet').click();
   await page.locator('[data-series="voisins"]').click();
   assert.equal(money(await page.locator('#cost').innerText()),900,'New stake replaces previous round cost');
@@ -168,7 +197,7 @@ try{
   if(await page.locator('#historyNav').isVisible())await page.locator('#historyNav').click();else {await page.locator('#accountBtn').click();await page.locator('#profileHistoryBtn').click();}assert.equal(await page.locator('.history-table tbody tr').count(),11);
   assert.ok(await page.evaluate(()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)<=innerWidth+1),'Horizontal overflow');
   await context.close();
-  report.push({viewport,status:'passed',checks:['all ten results inline without automatic dialogs','public leaderboard with current player','compact slot coefficients and free spin rules','scene carousel and featured game navigation','light theme and persistence','320px layout and reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','single-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
+  report.push({viewport,status:'passed',checks:['all ten results inline without automatic dialogs','public leaderboard with current player','compact slot coefficients and free spin rules','ten distinct posters and navigation to every game','light theme and persistence','320/390/768/1440px layouts, both themes, reduced motion','all four roulette series: positions, amounts and totals','new roulette stake after completed round','keyboard focus','register/login/logout/persistence','search and categories','roulette single and boundary split','five-seat blackjack and active hand restoration','russian exchange','threecard Pair Plus','holdem check/bet','single-box baccarat and independent payouts','dice invalid stake and recovery','mines reveal/cashout','slot reel animation and server result','slot payout dialog','roulette aggregated limits','crash cashout','history','no overflow','no hidden active game fields']});
  }
  assert.deepEqual(errors,[]);assert.equal(resultTypes.size,10,'All ten games show correct result windows');
  await writeFile('test-results/browser.json',JSON.stringify({report,errors},null,2));
