@@ -104,7 +104,7 @@ function bindScene(){
  }
  $('#sceneNext').onclick=()=>change(featuredIndex+1);$('#scenePrev').onclick=()=>change(featuredIndex-1);
  hero.querySelectorAll('[data-hero-index]').forEach(b=>b.onclick=()=>change(Number(b.dataset.heroIndex)));
- hero.querySelectorAll('[data-flavor]').forEach(b=>b.onclick=()=>updateFlavor(b.dataset.flavor));
+ hero.querySelectorAll('[data-flavor]').forEach(b=>b.onclick=()=>{updateFlavor(b.dataset.flavor);sync()});
  object.onclick=()=>{if(!switching)openGame(featuredGames[featuredIndex])};
  viewport.onpointermove=e=>{if(e.pointerType==='touch')return;const r=viewport.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width-.5)*2;mouse.y=((e.clientY-r.top)/r.height-.5)*2};
  viewport.onpointerleave=()=>{mouse={x:0,y:0}};
