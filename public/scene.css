@@ -146,3 +146,6 @@ body[data-view=lobby] .poster:hover{box-shadow:0 0 0 3px #fbcfe8}.motion-paused 
 @keyframes hero-slot-spin{from{transform:translateY(0)}to{transform:translateY(-50%)}}
 .immersive-hero.motion-paused .showcase-wheel .wheel-face,.immersive-hero.motion-paused .showcase-slot-track{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){.immersive-object[data-featured="roulette"] .showcase-wheel .wheel-face,.showcase-slot-track{animation:none!important}}
+
+/* Keep the roulette poster's base felt visible when CSS custom properties are unavailable. */
+.poster-roulette{background-color:#285347}
