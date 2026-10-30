@@ -131,3 +131,18 @@ body[data-view=lobby] .poster:hover{box-shadow:0 0 0 3px #fbcfe8}.motion-paused 
 @media(max-width:950px){.game-card.poster{min-height:290px;height:290px}}
 @media(max-width:650px){.game-card.poster{min-height:255px;height:255px}.poster-roulette .poster-title{font-size:39px}.poster-holdem .poster-title{font-size:34px}.poster-crash .poster-title{font-size:35px}}
 @media(prefers-reduced-motion:reduce){.immersive-object-art .rocket-exhaust{display:none}.game-card.poster,.game-card.poster:hover{transform:none}}
+
+
+/* Game-specific motion in the existing hero carousel. */
+.immersive-object[data-featured="roulette"] .showcase-wheel .wheel-face{animation:hero-roulette-spin 7.5s cubic-bezier(.18,.7,.22,1) infinite!important;transform-origin:50% 50%}
+@keyframes hero-roulette-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.showcase-slot-machine{position:absolute;inset:0;display:block}
+.showcase-slot-machine>img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 30px 16px #001b1677)}
+.showcase-slot-window{position:absolute;left:19%;top:31%;width:58%;height:38%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:hidden;background:#f5eed7;border:1px solid #151515;box-shadow:inset 0 0 9px #0006}
+.showcase-slot-reel{min-width:0;overflow:hidden;border-right:1px solid #171717}
+.showcase-slot-reel:last-child{border-right:0}
+.showcase-slot-track{display:flex;flex-direction:column;height:200%;animation:hero-slot-spin 1.45s linear infinite;animation-delay:var(--reel-delay,0s);will-change:transform}
+.showcase-slot-symbol{display:grid;place-items:center;flex:0 0 25%;height:25%;font:800 clamp(15px,2.5vw,34px)/1 Arial,sans-serif;color:#d22f27;text-shadow:0 1px 0 #fff8}
+@keyframes hero-slot-spin{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+.immersive-hero.motion-paused .showcase-wheel .wheel-face,.immersive-hero.motion-paused .showcase-slot-track{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.immersive-object[data-featured="roulette"] .showcase-wheel .wheel-face,.showcase-slot-track{animation:none!important}}
