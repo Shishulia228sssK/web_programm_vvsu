@@ -25,15 +25,17 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import {mkdir,writeFile} from 'node:fs/promises';
+          import {mkdir,writeFile,readFile} from 'node:fs/promises';
           import {chromium} from 'playwright';
           const origin='https://web-programm-vvsu.onrender.com';
+          const expectedCss=await readFile('public/scene.css','utf8');
           let ready=false;
           for(let i=0;i<24;i++){
             try{
               const response=await fetch(origin+'/?verify='+Date.now(),{signal:AbortSignal.timeout(15000)});
               const html=await response.text();
-              if(response.ok&&html.includes('aurora-photos-v1')){ready=true;break}
+              const liveCss=await (await fetch(origin+'/scene.css?verify='+Date.now(),{signal:AbortSignal.timeout(15000)})).text();
+              if(response.ok&&html.includes('aurora-photos-v1')&&liveCss===expectedCss){ready=true;break}
               console.log('Waiting for Render: attempt '+(i+1)+', status '+response.status);
             }catch(e){console.log('Waiting for Render: '+e.message)}
             await new Promise(r=>setTimeout(r,10000));
@@ -58,7 +60,7 @@ jobs:
             await page.evaluate(()=>scrollTo(0,0));
             await page.screenshot({path:'test-results/render/desktop.png',fullPage:true});
             await page.locator('#catalog').scrollIntoViewIfNeeded();
-            const picture=await page.screenshot({type:'jpeg',quality:45});
+            const picture=await page.screenshot({type:'jpeg',quality:45,fullPage:true});
             const encoded=picture.toString('base64');
             for(let i=0;i<encoded.length;i+=8000)console.log('RENDER_PREVIEW_PART:'+encoded.slice(i,i+8000));
             await page.setViewportSize({width:390,height:844});
